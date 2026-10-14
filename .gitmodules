@@ -1,0 +1,3 @@
+[submodule "database/arcadedb"]
+	path = database/arcadedb
+	url = git@github.com:nikhil-contextd/arcadedb.git

@@ -1,0 +1,14 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" role="img" aria-label="Snowflake app icon">
+  <rect width="64" height="64" rx="14" fill="#29b5e8"/>
+  <g fill="none" stroke="#ffffff" stroke-linecap="round" stroke-linejoin="round" stroke-width="4">
+    <path d="M32 13v38"/>
+    <path d="m21 18 11 7 11-7"/>
+    <path d="m21 46 11-7 11 7"/>
+    <path d="M15.5 22.5 48.5 41.5"/>
+    <path d="m16 35 12.5-1.5 4.5 10"/>
+    <path d="m48 29-12.5 1.5-4.5-10"/>
+    <path d="M48.5 22.5 15.5 41.5"/>
+    <path d="m48 35-12.5-1.5-4.5 10"/>
+    <path d="m16 29 12.5 1.5 4.5-10"/>
+  </g>
+</svg>

@@ -1,0 +1,348 @@
+# docker-compose.yml
+# Used for "clone & run" deployment scenario
+# Started by `make start` with auto-generated .env
+
+name: contextd
+
+services:
+  postgres:
+    container_name: contextd-db
+    image: postgres:16
+    # Uses variables from .env with fallbacks
+    environment:
+      POSTGRES_DB: contextd
+      POSTGRES_USER: contextd
+      POSTGRES_PASSWORD: contextd-dev-password
+    command:
+      - "postgres"
+      - "-c"
+      - "max_connections=200"
+      - "-c"
+      - "shared_buffers=256MB"
+      - "-c"
+      - "effective_cache_size=1GB"
+    ports:
+      - "5436:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: [ "CMD-SHELL", "pg_isready -U contextd" ]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+  redis:
+    container_name: contextd-redis
+    image: redis:7-alpine
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis_data:/data
+    healthcheck:
+      test: [ "CMD", "redis-cli", "ping" ]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+  milvus-etcd:
+    container_name: contextd-milvus-etcd
+    image: quay.io/coreos/etcd:v3.5.18
+    environment:
+      - ETCD_AUTO_COMPACTION_MODE=revision
+      - ETCD_AUTO_COMPACTION_RETENTION=1000
+      - ETCD_QUOTA_BACKEND_BYTES=4294967296
+      - ETCD_SNAPSHOT_COUNT=50000
+    command:
+      - etcd
+      - --advertise-client-urls=http://milvus-etcd:2379
+      - --listen-client-urls=http://0.0.0.0:2379
+      - --data-dir=/etcd
+    volumes:
+      - milvus_etcd_data:/etcd
+    healthcheck:
+      test: [ "CMD", "etcdctl", "endpoint", "health" ]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    restart: on-failure
+
+  milvus:
+    container_name: contextd-milvus
+    image: milvusdb/milvus:latest
+    command: [ "milvus", "run", "standalone" ]
+    ports:
+      - "19530:19530"
+      - "9091:9091"
+    environment:
+      - ETCD_ENDPOINTS=milvus-etcd:2379
+      - COMMON_STORAGETYPE=local
+    volumes:
+      - milvus_data:/var/lib/milvus
+    depends_on:
+      milvus-etcd:
+        condition: service_healthy
+    healthcheck:
+      test: [ "CMD", "curl", "-f", "http://localhost:9091/healthz" ]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+      start_period: 30s
+    restart: on-failure
+
+  backend:
+    container_name: contextd-backend
+    # Build from local code by default, or use pre-built image if BACKEND_IMAGE is set
+    build:
+      context: ..
+      dockerfile: docker/backend/Dockerfile
+    image: ${BACKEND_IMAGE:-contextd-backend:local}
+    # Import all variables from .env file
+    env_file:
+      - ../.env
+    ports:
+      - "8001:8001"
+    volumes:
+      - contextd_storage:/app/local_storage
+    # These variables override any from .env file
+    # Required for container networking (services refer to container names, not localhost)
+    environment:
+      # Override any localhost references for container networking
+      - POSTGRES_HOST=postgres
+      - POSTGRES_PORT=5432
+      - POSTGRES_USER=contextd
+      - POSTGRES_PASSWORD=contextd-dev-password
+      - POSTGRES_DB=contextd
+      - PROJECT_NAME=ContextD
+      - GRAPH_GDS_GRAPH_NAME=contextd_graph
+      - SHOW_LLM_PROMPT=false
+      - REDIS_HOST=redis
+      - VECTOR_STORE_PROVIDER=milvus
+      - MILVUS_HOST=milvus
+      - MILVUS_PORT=19530
+      - MILVUS_COLLECTION=contextd_adk_memories
+      - SEARCH_INDEX_BACKEND=neo4j-fulltext
+      - USE_ENTITY_INDEXING=true
+      - INDEX_FULLTEXT_ENABLED=true
+      - SESSION_REDIS_HOST=redis
+      - SESSION_REDIS_PORT=6379
+      - LANGFUSE_ENABLED=false
+      - NEO4J_URI=bolt://neo4j:7687
+      - NEO4J_USER=neo4j
+      - NEO4J_PASSWORD=contextd-dev-password
+      # Environment configuration (can be overridden in .env)
+      - ENVIRONMENT=${ENVIRONMENT:-local}
+      - LOCAL_DEVELOPMENT=${LOCAL_DEVELOPMENT:-true}
+      # Temporal configuration
+      - TEMPORAL_HOST=temporal
+      - TEMPORAL_PORT=7233
+      - TEMPORAL_NAMESPACE=default
+      - TEMPORAL_ENABLED=true
+      - AUTH_ENABLED=false
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+      milvus:
+        condition: service_healthy
+      neo4j:
+        condition: service_healthy
+    healthcheck:
+      test: [ "CMD", "curl", "-f", "http://localhost:8001/health" ]
+      interval: 10s
+      timeout: 30s
+      retries: 10
+      start_period: 60s
+    restart: on-failure
+
+  frontend:
+    container_name: contextd-frontend
+    # Build from local code by default, or use pre-built image if FRONTEND_IMAGE is set
+    build:
+      context: ..
+      dockerfile: docker/frontend/Dockerfile
+    image: ${FRONTEND_IMAGE:-contextd-frontend:local}
+    # Profile: only start if explicitly enabled with --profile frontend
+    # Not needed for backend-only testing (API tests, connector tests)
+    profiles:
+      - frontend
+    ports:
+      - "${FRONTEND_LOCAL_DEVELOPMENT_PORT:-8080}:8080"
+    environment:
+      - API_URL=${API_FULL_URL:-http://localhost:8001}
+      - ENABLE_AUTH=false
+      - ANALYTICS_ENABLED=${ANALYTICS_ENABLED:-false}
+      - POSTHOG_API_KEY=${POSTHOG_API_KEY:-}
+      - POSTHOG_HOST=${POSTHOG_HOST:-https://eu.i.posthog.com}
+    depends_on:
+      backend:
+        condition: service_healthy
+    healthcheck:
+      test: [ "CMD", "wget", "--spider", "-q", "http://localhost:8080" ]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+    restart: on-failure
+
+  # Frontend dev server: hot reload on code change (no rebuild). Use profile frontend-dev.
+  frontend-dev:
+    container_name: contextd-frontend-dev
+    build:
+      context: ..
+      dockerfile: docker/frontend/Dockerfile.dev
+    image: contextd-frontend-dev:local
+    profiles:
+      - frontend-dev
+    ports:
+      - "${FRONTEND_LOCAL_DEVELOPMENT_PORT:-8080}:8080"
+    environment:
+      - API_URL=${API_FULL_URL:-http://localhost:8001}
+      - ENABLE_AUTH=false
+      - VITE_ANALYTICS_ENABLED=${ANALYTICS_ENABLED:-false}
+      - VITE_POSTHOG_API_KEY=${POSTHOG_API_KEY:-}
+      - VITE_POSTHOG_HOST=${POSTHOG_HOST:-https://eu.i.posthog.com}
+    volumes:
+      - ../frontend:/app
+      - frontend_node_modules:/app/node_modules
+    depends_on:
+      backend:
+        condition: service_healthy
+    healthcheck:
+      test: [ "CMD", "wget", "--spider", "-q", "http://localhost:8080" ]
+      interval: 15s
+      timeout: 5s
+      retries: 5
+      start_period: 30s
+    restart: on-failure
+
+  neo4j:
+    container_name: contextd-neo4j
+    image: neo4j:5-enterprise
+    ports:
+      - "7474:7474"  # HTTP
+      - "7687:7687"  # Bolt
+    environment:
+      - NEO4J_ACCEPT_LICENSE_AGREEMENT=yes
+      - NEO4J_PLUGINS=["apoc","graph-data-science"]
+      - NEO4J_AUTH=neo4j/contextd-dev-password
+      - NEO4J_server_memory_heap_initial__size=512m
+      - NEO4J_server_memory_heap_max__size=2G
+      - NEO4J_server_memory_pagecache_size=512m
+      - NEO4J_dbms_security_procedures_unrestricted=apoc.*,gds.*
+      - NEO4J_dbms_security_procedures_allowlist=apoc.*,gds.*
+    volumes:
+      - neo4j_data:/data
+      - neo4j_logs:/logs
+    healthcheck:
+      test: ["CMD-SHELL", "cypher-shell -u neo4j -p contextd-dev-password -d system 'SHOW DATABASES YIELD name RETURN count(name)'"]
+      interval: 10s
+      timeout: 10s
+      retries: 10
+      start_period: 40s
+    restart: on-failure
+
+  temporal:
+    container_name: contextd-temporal
+    image: temporalio/auto-setup:1.24.2
+    ports:
+      - "7233:7233"
+      - "8233:8233"
+    environment:
+      - DB=postgres12
+      - DB_PORT=5432
+      - POSTGRES_USER=contextd
+      - POSTGRES_PWD=contextd-dev-password
+      - POSTGRES_SEEDS=postgres
+      - DYNAMIC_CONFIG_FILE_PATH=config/dynamicconfig/development-sql.yaml
+    volumes:
+      - ./temporal-config:/etc/temporal/config/dynamicconfig
+    depends_on:
+      postgres:
+        condition: service_healthy
+    healthcheck:
+      test: [ "CMD", "tctl", "--address", "temporal:7233", "workflow", "list" ]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+    restart: on-failure
+
+  temporal-ui:
+    container_name: contextd-temporal-ui
+    image: temporalio/ui:2.26.2
+    ports:
+      - "8088:8080"
+    environment:
+      - TEMPORAL_ADDRESS=temporal:7233
+      - TEMPORAL_CORS_ORIGINS=http://localhost:3000
+    depends_on:
+      temporal:
+        condition: service_healthy
+    restart: on-failure
+
+  temporal-worker:
+    container_name: contextd-temporal-worker
+    # Build from local code by default (shares build context with backend)
+    build:
+      context: ..
+      dockerfile: docker/backend/Dockerfile
+    image: ${BACKEND_IMAGE:-contextd-backend:local}
+    # Import all variables from .env file (same as backend)
+    env_file:
+      - ../.env
+    environment:
+      # Override any localhost references for container networking
+      - POSTGRES_HOST=postgres
+      - POSTGRES_PORT=5432
+      - POSTGRES_USER=contextd
+      - POSTGRES_PASSWORD=contextd-dev-password
+      - POSTGRES_DB=contextd
+      - PROJECT_NAME=ContextD
+      - GRAPH_GDS_GRAPH_NAME=contextd_graph
+      - SHOW_LLM_PROMPT=false
+      - REDIS_HOST=redis
+      - VECTOR_STORE_PROVIDER=milvus
+      - MILVUS_HOST=milvus
+      - MILVUS_PORT=19530
+      - MILVUS_COLLECTION=contextd_adk_memories
+      - SEARCH_INDEX_BACKEND=neo4j-fulltext
+      - USE_ENTITY_INDEXING=true
+      - INDEX_FULLTEXT_ENABLED=true
+      - SESSION_REDIS_HOST=redis
+      - SESSION_REDIS_PORT=6379
+      - LANGFUSE_ENABLED=false
+      - NEO4J_URI=bolt://neo4j:7687
+      - NEO4J_USER=neo4j
+      - NEO4J_PASSWORD=contextd-dev-password
+      # Environment configuration (can be overridden in .env)
+      - ENVIRONMENT=${ENVIRONMENT:-local}
+      - LOCAL_DEVELOPMENT=${LOCAL_DEVELOPMENT:-true}
+      # Temporal configuration
+      - TEMPORAL_HOST=temporal
+      - TEMPORAL_PORT=7233
+      - TEMPORAL_NAMESPACE=default
+      - TEMPORAL_ENABLED=true
+    volumes:
+      - contextd_storage:/app/local_storage
+    entrypoint: [ "python", "-m", "contextd.platform.temporal.worker" ]
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+      milvus:
+        condition: service_healthy
+      temporal:
+        condition: service_healthy
+      neo4j:
+        condition: service_healthy
+    restart: on-failure
+
+volumes:
+  postgres_data:
+  redis_data:
+  milvus_data:
+  milvus_etcd_data:
+  neo4j_data:
+  neo4j_logs:
+  frontend_node_modules:
+  contextd_storage:

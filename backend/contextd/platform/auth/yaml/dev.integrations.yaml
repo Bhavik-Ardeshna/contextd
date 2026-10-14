@@ -1,0 +1,426 @@
+# OAuth application configuration for local and development environments.
+# Replace credential placeholders with your own provider application credentials.
+# Keep configured credentials private and out of Git commits.
+
+integrations:
+  airtable:
+    oauth_type: "with_refresh"
+    url: "https://airtable.com/oauth2/v1/authorize"
+    backend_url: "https://airtable.com/oauth2/v1/token"
+    grant_type: "authorization_code"
+    client_id: "your-airtable-client-id"
+    client_secret: "your-airtable-client-secret"
+    content_type: "application/x-www-form-urlencoded"
+    client_credential_location: "header"
+    scope: "schema.bases:read data.records:read data.recordComments:read"
+    requires_pkce: true
+    additional_frontend_params:
+      response_type: "code"
+
+  asana:
+    oauth_type: "with_refresh"
+    url: "https://app.asana.com/-/oauth_authorize"
+    backend_url: "https://app.asana.com/-/oauth_token"
+    grant_type: "authorization_code"
+    client_id: "your-asana-client-id"
+    client_secret: "your-asana-client-secret"
+    content_type: "application/x-www-form-urlencoded"
+    client_credential_location: "body"
+
+  attio:
+
+  bitbucket:
+
+  box:
+    oauth_type: "with_refresh"
+    url: "https://account.box.com/api/oauth2/authorize"
+    backend_url: "https://api.box.com/oauth2/token"
+    grant_type: "authorization_code"
+    client_id: "your-box-client-id"
+    client_secret: "your-box-client-secret"
+    content_type: "application/x-www-form-urlencoded"
+    client_credential_location: "body"
+    scope: "root_readwrite"
+
+  confluence:
+    oauth_type: "with_rotating_refresh"
+    url: "https://auth.atlassian.com/authorize"
+    backend_url: "https://auth.atlassian.com/oauth/token"
+    grant_type: "authorization_code"
+    client_id: "your-confluence-client-id"
+    client_secret: "your-confluence-client-secret"
+    content_type: "application/x-www-form-urlencoded"
+    client_credential_location: "body"
+    scope: "offline_access read:content:confluence read:page:confluence read:space:confluence read:user:confluence read:comment:confluence read:attachment:confluence read:configuration:confluence"
+    additional_frontend_params:
+      audience: "api.atlassian.com"
+      prompt: "consent"
+      response_mode: "query"
+      state: "YOUR_USER_BOUND_VALUE"
+
+  dropbox:
+    oauth_type: "with_refresh"
+    url: "https://www.dropbox.com/oauth2/authorize"
+    backend_url: "https://api.dropbox.com/oauth2/token"
+    grant_type: "authorization_code"
+    client_id: "your-dropbox-client-id"
+    client_secret: "your-dropbox-client-secret"
+    content_type: "application/x-www-form-urlencoded"
+    client_credential_location: "body"
+    additional_frontend_params:
+      token_access_type: "offline"
+
+  excel:
+    oauth_type: "with_rotating_refresh"
+    url: "https://login.microsoftonline.com/common/oauth2/v2.0/authorize"
+    backend_url: "https://login.microsoftonline.com/common/oauth2/v2.0/token"
+    grant_type: "authorization_code"
+    client_id: "your-excel-client-id"
+    client_secret: "your-excel-client-secret"
+    content_type: "application/x-www-form-urlencoded"
+    client_credential_location: "body"
+    scope: "offline_access https://graph.microsoft.com/User.Read https://graph.microsoft.com/Files.Read.All"
+    additional_frontend_params:
+      response_type: "code"
+      response_mode: "query"
+
+  github:
+
+  gitlab:
+    oauth_type: "with_refresh"
+    url: "https://gitlab.com/oauth/authorize"
+    backend_url: "https://gitlab.com/oauth/token"
+    grant_type: "authorization_code"
+    client_id: "your-gitlab-client-id"
+    client_secret: "your-gitlab-client-secret"
+    content_type: "application/x-www-form-urlencoded"
+    client_credential_location: "body"
+    scope: "read_api read_user read_repository openid profile email"
+
+  gmail:
+    oauth_type: "with_refresh"
+    url: "https://accounts.google.com/o/oauth2/auth"
+    backend_url: "https://oauth2.googleapis.com/token"
+    grant_type: "authorization_code"
+    client_id: "your-gmail-client-id"
+    client_secret: "your-gmail-client-secret"
+    content_type: "application/x-www-form-urlencoded"
+    client_credential_location: "body"
+    scope: "https://www.googleapis.com/auth/gmail.readonly"
+    additional_frontend_params:
+      access_type: "offline"
+      prompt: "consent"
+
+  google_calendar:
+    oauth_type: "with_refresh"
+    url: "https://accounts.google.com/o/oauth2/auth"
+    backend_url: "https://oauth2.googleapis.com/token"
+    grant_type: "authorization_code"
+    client_id: "your-google-calendar-client-id"
+    client_secret: "your-google-calendar-client-secret"
+    content_type: "application/x-www-form-urlencoded"
+    client_credential_location: "body"
+    scope: "https://www.googleapis.com/auth/calendar.events.public.readonly https://www.googleapis.com/auth/calendar.freebusy https://www.googleapis.com/auth/calendar.readonly https://www.googleapis.com/auth/calendar.calendars.readonly https://www.googleapis.com/auth/calendar.events.owned.readonly https://www.googleapis.com/auth/calendar.events.readonly"
+    additional_frontend_params:
+      access_type: "offline"
+      prompt: "consent"
+
+  google_docs:
+    oauth_type: "with_refresh"
+    url: "https://accounts.google.com/o/oauth2/auth"
+    backend_url: "https://oauth2.googleapis.com/token"
+    grant_type: "authorization_code"
+    client_id: "your-google-docs-client-id"
+    client_secret: "your-google-docs-client-secret"
+    content_type: "application/x-www-form-urlencoded"
+    client_credential_location: "body"
+    scope: "https://www.googleapis.com/auth/documents.readonly https://www.googleapis.com/auth/drive.readonly"
+    additional_frontend_params:
+      access_type: "offline"
+      prompt: "consent"
+
+  google_slides:
+    oauth_type: "with_refresh"
+    url: "https://accounts.google.com/o/oauth2/auth"
+    backend_url: "https://oauth2.googleapis.com/token"
+    grant_type: "authorization_code"
+    client_id: "your-google-slides-client-id"
+    client_secret: "your-google-slides-client-secret"
+    content_type: "application/x-www-form-urlencoded"
+    client_credential_location: "body"
+    scope: "https://www.googleapis.com/auth/presentations.readonly https://www.googleapis.com/auth/drive.readonly"
+    additional_frontend_params:
+      access_type: "offline"
+      prompt: "consent"
+
+  google_drive:
+    oauth_type: "with_refresh"
+    url: "https://accounts.google.com/o/oauth2/auth"
+    backend_url: "https://oauth2.googleapis.com/token"
+    grant_type: "authorization_code"
+    client_id: "your-google-drive-client-id"
+    client_secret: "your-google-drive-client-secret"
+    content_type: "application/x-www-form-urlencoded"
+    client_credential_location: "body"
+    scope: "https://www.googleapis.com/auth/docs https://www.googleapis.com/auth/drive.photos.readonly https://www.googleapis.com/auth/drive https://www.googleapis.com/auth/drive.readonly https://www.googleapis.com/auth/drive.metadata https://www.googleapis.com/auth/drive.metadata.readonly https://www.googleapis.com/auth/gmail.readonly"
+    additional_frontend_params:
+      access_type: "offline"
+      prompt: "consent"
+
+  hubspot:
+    oauth_type: "with_refresh"
+    url: "https://app.hubspot.com/oauth/authorize"
+    backend_url: "https://api.hubapi.com/oauth/v1/token"
+    grant_type: "authorization_code"
+    client_id: "your-hubspot-client-id"
+    client_secret: "your-hubspot-client-secret"
+    content_type: "application/x-www-form-urlencoded"
+    client_credential_location: "body"
+    scope: "crm.objects.companies.read crm.objects.contacts.read crm.objects.deals.read oauth tickets"
+
+  intercom:
+    oauth_type: "access_only"
+    url: "https://app.intercom.com/oauth"
+    backend_url: "https://api.intercom.io/auth/eagle/token"
+    grant_type: "authorization_code"
+    client_id: "your-intercom-client-id"
+    client_secret_keyvault_name: "your-intercom-client-secret"
+    content_type: "application/x-www-form-urlencoded"
+    client_credential_location: "body"
+    scope: "read write"
+
+  jira:
+    oauth_type: "with_rotating_refresh"
+    url: "https://auth.atlassian.com/authorize"
+    backend_url: "https://auth.atlassian.com/oauth/token"
+    grant_type: "authorization_code"
+    client_id: "your-jira-client-id"
+    client_secret: "your-jira-client-secret"
+    content_type: "application/x-www-form-urlencoded"
+    client_credential_location: "body"
+    scope: "read offline_access manage:jira-configuration manage:jira-project read:jira-user read:jira-work read:workflow:jira read:application-role:jira read:avatar:jira read:group:jira read:issue-type:jira read:issue-type-hierarchy:jira read:user:jira read:project:jira read:project-category:jira read:project.component:jira read:project.property:jira read:project-version:jira read:workflow:jira read:project.property:jira"
+    additional_frontend_params:
+      audience: "api.atlassian.com"
+      prompt: "consent"
+      response_mode: "query"
+      state: "YOUR_USER_BOUND_VALUE"
+
+  linear:
+    oauth_type: "access_only"
+    url: "https://linear.app/oauth/authorize"
+    backend_url: "https://api.linear.app/oauth/token"
+    grant_type: "authorization_code"
+    client_id: "your-linear-client-id"
+    client_secret: "your-linear-client-secret"
+    content_type: "application/x-www-form-urlencoded"
+    client_credential_location: "body"
+    scope: "read"
+
+  teams:
+    oauth_type: "with_rotating_refresh"
+    url: "https://login.microsoftonline.com/common/oauth2/v2.0/authorize"
+    backend_url: "https://login.microsoftonline.com/common/oauth2/v2.0/token"
+    grant_type: "authorization_code"
+    client_id: "your-teams-client-id"
+    client_secret: "your-teams-client-secret"
+    content_type: "application/x-www-form-urlencoded"
+    client_credential_location: "body"
+    scope: "offline_access https://graph.microsoft.com/User.Read https://graph.microsoft.com/Team.ReadBasic.All https://graph.microsoft.com/Channel.ReadBasic.All https://graph.microsoft.com/ChannelMessage.Read.All https://graph.microsoft.com/Chat.Read https://graph.microsoft.com/ChatMessage.Read https://graph.microsoft.com/Group.Read.All"
+    additional_frontend_params:
+      response_type: "code"
+      response_mode: "query"
+
+  monday:
+    oauth_type: "access_only"
+    url: "https://auth.monday.com/oauth2/authorize"
+    backend_url: "https://auth.monday.com/oauth2/token"
+    grant_type: "authorization_code"
+    client_id: "your-monday-client-id"
+    client_secret: "your-monday-client-secret"
+    content_type: "application/x-www-form-urlencoded"
+    client_credential_location: "body"
+    scope: "me:read boards:read docs:read workspaces:read users:read account:read updates:read assets:read tags:read teams:read"
+
+  notion:
+    oauth_type: "access_only"
+    url: "https://api.notion.com/v1/oauth/authorize"
+    backend_url: "https://api.notion.com/v1/oauth/token"
+    grant_type: "authorization_code"
+    client_id: "your-notion-client-id"
+    client_secret: "your-notion-client-secret"
+    content_type: "application/x-www-form-urlencoded"
+    client_credential_location: "header"
+    additional_frontend_params:
+      owner: "user"
+
+  onedrive:
+    oauth_type: "with_refresh"
+    url: "https://login.microsoftonline.com/common/oauth2/v2.0/authorize"
+    backend_url: "https://login.microsoftonline.com/common/oauth2/v2.0/token"
+    grant_type: "authorization_code"
+    client_id: "your-onedrive-client-id"
+    client_secret: "your-onedrive-client-secret"
+    content_type: "application/x-www-form-urlencoded"
+    client_credential_location: "body"
+    scope: "offline_access https://graph.microsoft.com/User.Read https://graph.microsoft.com/Files.Read.All"
+    additional_frontend_params:
+      response_type: "code"
+
+  onenote:
+    oauth_type: "with_rotating_refresh"
+    url: "https://login.microsoftonline.com/common/oauth2/v2.0/authorize"
+    backend_url: "https://login.microsoftonline.com/common/oauth2/v2.0/token"
+    grant_type: "authorization_code"
+    client_id: "your-onenote-client-id"
+    client_secret: "your-onenote-client-secret"
+    content_type: "application/x-www-form-urlencoded"
+    client_credential_location: "body"
+    scope: "offline_access https://graph.microsoft.com/User.Read https://graph.microsoft.com/Notes.Read"
+    additional_frontend_params:
+      response_type: "code"
+      response_mode: "query"
+
+  outlook_calendar:
+    oauth_type: "with_rotating_refresh"
+    url: "https://login.microsoftonline.com/common/oauth2/v2.0/authorize"
+    backend_url: "https://login.microsoftonline.com/common/oauth2/v2.0/token"
+    grant_type: "authorization_code"
+    client_id: "your-outlook-calendar-client-id"
+    client_secret: "your-outlook-calendar-client-secret"
+    content_type: "application/x-www-form-urlencoded"
+    client_credential_location: "body"
+    scope: "offline_access https://graph.microsoft.com/User.Read https://graph.microsoft.com/Calendars.Read https://graph.microsoft.com/Calendars.Read.Shared"
+    additional_frontend_params:
+      response_mode: "query"
+
+  outlook_mail:
+    oauth_type: "with_rotating_refresh"
+    url: "https://login.microsoftonline.com/common/oauth2/v2.0/authorize"
+    backend_url: "https://login.microsoftonline.com/common/oauth2/v2.0/token"
+    grant_type: "authorization_code"
+    client_id: "your-outlook-mail-client-id"
+    client_secret: "your-outlook-mail-client-secret"
+    content_type: "application/x-www-form-urlencoded"
+    client_credential_location: "body"
+    scope: "offline_access https://graph.microsoft.com/User.Read https://graph.microsoft.com/MailboxFolder.Read https://graph.microsoft.com/Mail.Read"
+    additional_frontend_params:
+      response_mode: "query"
+
+  pipedrive:
+
+  sharepoint:
+    oauth_type: "with_rotating_refresh"
+    url: "https://login.microsoftonline.com/common/oauth2/v2.0/authorize"
+    backend_url: "https://login.microsoftonline.com/common/oauth2/v2.0/token"
+    grant_type: "authorization_code"
+    client_id: "your-sharepoint-client-id"
+    client_secret: "your-sharepoint-client-secret"
+    content_type: "application/x-www-form-urlencoded"
+    client_credential_location: "body"
+    scope: "offline_access https://graph.microsoft.com/User.Read.All https://graph.microsoft.com/Group.Read.All https://graph.microsoft.com/Sites.Read.All https://graph.microsoft.com/Files.Read.All"
+    additional_frontend_params:
+      response_type: "code"
+      response_mode: "query"
+
+  slack:
+    oauth_type: "access_only"
+    url: "https://slack.com/oauth/v2/authorize"
+    backend_url: "https://slack.com/api/oauth.v2.access"
+    grant_type: "authorization_code"
+    client_id: "your-slack-client-id"
+    client_secret: "your-slack-client-secret"
+    content_type: "application/x-www-form-urlencoded"
+    client_credential_location: "body"
+    user_scope: "search:read"
+
+  stripe:
+
+  todoist:
+    oauth_type: "access_only"
+    url: "https://todoist.com/oauth/authorize"
+    backend_url: "https://todoist.com/oauth/access_token"
+    grant_type: "authorization_code"
+    client_id: "your-todoist-client-id"
+    client_secret: "your-todoist-client-secret"
+    content_type: "application/x-www-form-urlencoded"
+    client_credential_location: "body"
+    scope: "data:read"
+
+  trello:
+    oauth_type: "oauth1"
+    request_token_url: "https://trello.com/1/OAuthGetRequestToken"
+    authorization_url: "https://trello.com/1/OAuthAuthorizeToken"
+    access_token_url: "https://trello.com/1/OAuthGetAccessToken"
+    consumer_key: "your-trello-consumer-key"
+    consumer_secret: "your-trello-consumer-secret"
+    scope: "read,write"
+    expiration: "never"
+
+  zendesk:
+    oauth_type: "with_refresh"
+    url: "https://{subdomain}.zendesk.com/oauth/authorizations/new"
+    backend_url: "https://{subdomain}.zendesk.com/oauth/tokens"
+    grant_type: "authorization_code"
+    client_id: "your-zendesk-client-id"
+    client_secret: "your-zendesk-client-secret"
+    content_type: "application/x-www-form-urlencoded"
+    client_credential_location: "body"
+    scope: "read write"
+    url_template: true
+    backend_url_template: true
+
+  clickup:
+    oauth_type: "access_only"
+    url: "https://app.clickup.com/api"
+    backend_url: "https://api.clickup.com/api/v2/oauth/token"
+    grant_type: "authorization_code"
+    client_id: "your-clickup-client-id"
+    client_secret: "your-clickup-client-secret"
+    content_type: "application/x-www-form-urlencoded"
+    client_credential_location: "body"
+    scope: "public data:read team:read space:read list:read folder:read task:read comment:read"
+    additional_frontend_params:
+      access_type: "offline"
+      prompt: "consent"
+
+  salesforce:
+    oauth_type: "with_refresh"
+    url: "https://login.salesforce.com/services/oauth2/authorize"
+    backend_url: "https://login.salesforce.com/services/oauth2/token"
+    grant_type: "authorization_code"
+    client_id: "your-salesforce-client-id"
+    client_secret: "your-salesforce-client-secret"
+    content_type: "application/x-www-form-urlencoded"
+    client_credential_location: "body"
+    scope: "api refresh_token"
+    requires_pkce: true
+    additional_frontend_params:
+      response_type: "code"
+
+  word:
+    oauth_type: "with_rotating_refresh"
+    url: "https://login.microsoftonline.com/common/oauth2/v2.0/authorize"
+    backend_url: "https://login.microsoftonline.com/common/oauth2/v2.0/token"
+    grant_type: "authorization_code"
+    client_id: "your-word-client-id"
+    client_secret: "your-word-client-secret"
+    content_type: "application/x-www-form-urlencoded"
+    client_credential_location: "body"
+    scope: "offline_access https://graph.microsoft.com/User.Read https://graph.microsoft.com/Files.Read.All"
+    additional_frontend_params:
+      response_type: "code"
+      response_mode: "query"
+
+  zoho_crm:
+    oauth_type: "with_refresh"
+    url: "https://accounts.zoho.com/oauth/v2/auth"
+    backend_url: "https://accounts.zoho.com/oauth/v2/token"
+    grant_type: "authorization_code"
+    client_id: "your-zoho-crm-client-id"
+    client_secret: "your-zoho-crm-client-secret"
+    content_type: "application/x-www-form-urlencoded"
+    client_credential_location: "body"
+    scope: "ZohoCRM.modules.READ ZohoCRM.settings.READ ZohoCRM.users.READ"
+    additional_frontend_params:
+      access_type: "offline"
+      prompt: "consent"

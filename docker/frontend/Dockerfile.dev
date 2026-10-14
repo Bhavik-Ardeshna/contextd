@@ -1,0 +1,17 @@
+# Dev image: install deps and run Vite dev server (hot reload).
+# Use with volume mount ../frontend:/app and named volume for node_modules.
+FROM node:20-slim
+
+WORKDIR /app
+
+# Install wget for healthcheck
+RUN apt-get update && apt-get install -y --no-install-recommends wget && rm -rf /var/lib/apt/lists/*
+
+# Copy package files and install deps (base layer; volume mount may override /app)
+COPY frontend/package.json frontend/package-lock.json* ./
+RUN npm ci --no-audit --no-fund
+
+COPY docker/frontend/docker-entrypoint.dev.sh /usr/local/bin/
+RUN chmod +x /usr/local/bin/docker-entrypoint.dev.sh
+
+ENTRYPOINT ["/usr/local/bin/docker-entrypoint.dev.sh"]

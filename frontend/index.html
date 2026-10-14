@@ -1,0 +1,43 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>ContextD</title>
+  <meta name="description" content="ContextD - Navigate Your Data" />
+  <meta name="author" content="ContextD" />
+  <meta property="og:image" content="/thumbnail.png" />
+  <!-- Favicon -->
+  <link rel="icon" type="image/svg+xml" href="/navios.svg" />
+  <link rel="apple-touch-icon" href="/navios.svg" />
+  <!-- Google Fonts preconnect for faster loading (fonts imported in CSS) -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <script>
+    // On page load or when changing themes, best to add inline in `head` to avoid FOUC
+    (function () {
+      const storageKey = "contextd-ui-theme";
+      const theme = localStorage.getItem(storageKey);
+
+      if (theme === "dark" || (theme === null && window.matchMedia("(prefers-color-scheme: dark)").matches)) {
+        document.documentElement.classList.add("dark");
+      } else if (theme === "light" || theme === null) {
+        document.documentElement.classList.add("light");
+      }
+    })();
+  </script>
+  <!-- Reddit Pixel -->
+  <script>
+  !function(w,d){if(!w.rdt){var p=w.rdt=function(){p.sendEvent?p.sendEvent.apply(p,arguments):p.callQueue.push(arguments)};p.callQueue=[];var t=d.createElement("script");t.src="https://www.redditstatic.com/ads/pixel.js",t.async=!0;var s=d.getElementsByTagName("script")[0];s.parentNode.insertBefore(t,s)}}(window,document);
+  rdt('init','a2_ib2d0jv3vre5');
+  </script>
+  <!-- End Reddit Pixel -->
+</head>
+
+<body>
+  <div id="root"></div>
+  <script type="module" src="/src/main.tsx"></script>
+</body>
+
+</html>

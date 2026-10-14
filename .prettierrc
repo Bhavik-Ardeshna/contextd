@@ -1,0 +1,10 @@
+{
+  "overrides": [
+    {
+      "files": ["*.mdx", "*.md"],
+      "options": {
+        "parser": "none"
+      }
+    }
+  ]
+}

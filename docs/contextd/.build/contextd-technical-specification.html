@@ -1,0 +1,2111 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<title>ContextD — Technical Specification</title>
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&family=JetBrains+Mono:wght@400;500;600;700&display=swap" rel="stylesheet" />
+<style>/* =========================================================================
+   ContextD — Technical Specification PDF stylesheet
+   Brand: warm-neutral surfaces, orange #E45F1A accent, Inter + JetBrains Mono
+   ========================================================================= */
+
+/* ---------- Page geometry ---------- */
+@page {
+  size: A4;
+  margin: 22mm 18mm 22mm 18mm;
+
+  @top-left {
+    content: "ContextD";
+    font-family: "Inter", sans-serif;
+    font-size: 9pt;
+    font-weight: 700;
+    color: #E45F1A;
+    letter-spacing: 0.02em;
+    padding-bottom: 4mm;
+  }
+  @top-center {
+    content: "Technical Specification";
+    font-family: "Inter", sans-serif;
+    font-size: 8.5pt;
+    color: #6E7079;
+    letter-spacing: 0.04em;
+  }
+  @top-right {
+    content: "v1.0";
+    font-family: "JetBrains Mono", monospace;
+    font-size: 8.5pt;
+    color: #6E7079;
+  }
+  @bottom-left {
+    content: "ContextD · The Context Graph Database for AI";
+    font-family: "Inter", sans-serif;
+    font-size: 8pt;
+    color: #94969E;
+    padding-top: 4mm;
+  }
+  @bottom-right {
+    content: counter(page) " / " counter(pages);
+    font-family: "JetBrains Mono", monospace;
+    font-size: 8pt;
+    color: #94969E;
+    padding-top: 4mm;
+  }
+}
+
+/* Cover page — strip header & footer */
+@page :first {
+  margin: 0;
+  @top-left { content: ""; }
+  @top-center { content: ""; }
+  @top-right { content: ""; }
+  @bottom-left { content: ""; }
+  @bottom-right { content: ""; }
+}
+
+/* TOC page — keep clean */
+@page toc {
+  @top-left { content: "ContextD"; font-family: "Inter", sans-serif; font-size: 9pt; font-weight: 700; color: #E45F1A; }
+  @top-center { content: "Contents"; font-family: "Inter", sans-serif; font-size: 8.5pt; color: #6E7079; letter-spacing: 0.04em; }
+}
+
+/* ---------- Brand variables ---------- */
+:root {
+  --orange:        #E45F1A;
+  --orange-soft:   #F26B2C;
+  --orange-bg:     rgba(228,95,26,0.08);
+  --orange-bd:     rgba(228,95,26,0.30);
+
+  --bg:            #FFFFFF;
+  --surface-1:     #FAFAF7;
+  --surface-2:     #F6F6F2;
+  --surface-3:     #EFEFEA;
+  --border:        #E5E5DE;
+  --border-strong: #CFCFC8;
+
+  --fg:            #0F1117;
+  --fg-2:          #2B2D33;
+  --fg-muted:      #6E7079;
+  --fg-faint:      #94969E;
+
+  --amber:         #C8801B;
+  --green:         #1F9D6A;
+  --blue:          #1F86CC;
+  --red:           #D03A36;
+  --purple:        #7B5CF0;
+
+  --font-sans: "Inter", "Helvetica Neue", -apple-system, BlinkMacSystemFont, "Segoe UI", "Roboto", Arial, sans-serif;
+  --font-mono: "JetBrains Mono", "SF Mono", "Menlo", "Consolas", "Liberation Mono", monospace;
+  --font-display: "Inter", "Helvetica Neue", -apple-system, BlinkMacSystemFont, "Segoe UI", "Roboto", Arial, sans-serif;
+}
+
+/* ---------- Reset + base ---------- */
+* { box-sizing: border-box; }
+html { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+body {
+  font-family: var(--font-sans);
+  font-size: 10.2pt;
+  line-height: 1.55;
+  color: var(--fg);
+  background: var(--bg);
+  margin: 0;
+  font-feature-settings: "ss01", "cv11", "kern";
+  text-rendering: optimizeLegibility;
+}
+
+/* ---------- Cover page ---------- */
+.cover {
+  page: cover;
+  page-break-after: always;
+  break-after: page;
+  height: 297mm;
+  width: 210mm;
+  position: relative;
+  background: var(--bg);
+  color: var(--fg);
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  padding: 22mm 18mm;
+}
+.cover-grid {
+  position: absolute;
+  top: 0; left: 0; right: 0; bottom: 0;
+  background-color: var(--bg);
+  background-image:
+    linear-gradient(to right, rgba(228,95,26,0.05) 1px, transparent 1px),
+    linear-gradient(to bottom, rgba(228,95,26,0.05) 1px, transparent 1px);
+  background-size: 24mm 24mm;
+  background-position: 0 0;
+  pointer-events: none;
+  z-index: 0;
+}
+.cover-glow {
+  position: absolute;
+  top: -120mm; right: -80mm;
+  width: 260mm; height: 260mm;
+  border-radius: 50%;
+  background: radial-gradient(circle at center, rgba(228,95,26,0.16), rgba(228,95,26,0.06) 35%, transparent 65%);
+  pointer-events: none;
+  z-index: 1;
+}
+.cover-glow-2 {
+  position: absolute;
+  bottom: -100mm; left: -60mm;
+  width: 220mm; height: 220mm;
+  border-radius: 50%;
+  background: radial-gradient(circle at center, rgba(228,95,26,0.10), rgba(228,95,26,0.03) 40%, transparent 70%);
+  pointer-events: none;
+  z-index: 1;
+}
+.cover-top {
+  position: relative;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  z-index: 2;
+}
+.brand-name {
+  font-family: var(--font-display);
+  font-size: 22pt;
+  font-weight: 700;
+  letter-spacing: -0.015em;
+  color: var(--fg);
+}
+.brand-name .brand-d { color: var(--orange); }
+
+.cover-mid {
+  position: relative;
+  z-index: 2;
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  margin-top: -20mm;
+}
+.cover-eyebrow {
+  font-family: var(--font-mono);
+  font-size: 9.5pt;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.18em;
+  color: var(--orange);
+  margin-bottom: 14mm;
+}
+.cover-title {
+  font-family: var(--font-display);
+  font-size: 38pt;
+  font-weight: 700;
+  letter-spacing: -0.025em;
+  line-height: 1.05;
+  color: var(--fg);
+  margin: 0;
+  max-width: 160mm;
+}
+.cover-title .accent { color: var(--orange); }
+.cover-subtitle {
+  margin-top: 12mm;
+  font-family: var(--font-sans);
+  font-size: 13pt;
+  font-weight: 400;
+  line-height: 1.55;
+  color: var(--fg-2);
+  max-width: 150mm;
+}
+.cover-positioning {
+  margin-top: 14mm;
+  font-family: var(--font-mono);
+  font-size: 10pt;
+  color: var(--fg-muted);
+  letter-spacing: 0.02em;
+  line-height: 1.7;
+}
+.cover-positioning strong {
+  color: var(--orange);
+  font-weight: 700;
+}
+
+.cover-bottom {
+  position: relative;
+  z-index: 2;
+  display: flex;
+  justify-content: flex-end;
+}
+.cover-bottom .cover-edition {
+  font-family: var(--font-mono);
+  font-size: 8.5pt;
+  color: var(--fg-muted);
+  letter-spacing: 0.06em;
+  white-space: nowrap;
+}
+
+/* Running header content is now driven by @page rules (Chrome-compatible).
+   The .run-head / .run-meta elements (if emitted) are hidden. */
+.run-head, .run-meta { display: none; }
+
+/* ---------- Document content scope ---------- */
+.doc {
+  padding-top: 4mm;
+}
+
+/* ---------- Headings ---------- */
+.doc h1 {
+  font-family: var(--font-display);
+  font-size: 26pt;
+  font-weight: 700;
+  letter-spacing: -0.018em;
+  line-height: 1.1;
+  color: var(--fg);
+  margin: 0 0 12mm 0;
+  padding-top: 8mm;
+  page-break-before: always;
+  break-before: page;
+  border-bottom: 2px solid var(--orange);
+  padding-bottom: 6mm;
+}
+/* Suppress page-break for the first H1 right after cover */
+.doc > h1:first-child {
+  page-break-before: avoid;
+  break-before: auto;
+}
+/* "Part X — ..." gets a special treatment */
+.doc h1.part-title {
+  text-align: left;
+  font-size: 28pt;
+  border-bottom: 2px solid var(--orange);
+}
+
+.doc h2 {
+  font-family: var(--font-display);
+  font-size: 17pt;
+  font-weight: 700;
+  letter-spacing: -0.015em;
+  line-height: 1.22;
+  color: var(--fg);
+  margin: 11mm 0 3mm 0;
+  padding-bottom: 0;
+  page-break-after: avoid;
+  break-after: avoid;
+  position: relative;
+  padding-left: 4mm;
+}
+.doc h2::before {
+  content: "";
+  position: absolute;
+  left: 0;
+  top: 4pt;
+  bottom: 4pt;
+  width: 3px;
+  background: var(--orange);
+  border-radius: 2px;
+}
+
+.doc h3 {
+  font-family: var(--font-display);
+  font-size: 12.5pt;
+  font-weight: 600;
+  letter-spacing: -0.005em;
+  line-height: 1.28;
+  color: var(--fg);
+  margin: 6mm 0 2mm 0;
+  page-break-after: avoid;
+  break-after: avoid;
+}
+
+.doc h4 {
+  font-family: var(--font-display);
+  font-size: 11pt;
+  font-weight: 600;
+  color: var(--fg-2);
+  margin: 5mm 0 2mm 0;
+  text-transform: none;
+}
+
+/* ---------- Paragraphs and inline text ---------- */
+.doc p {
+  margin: 0 0 3.5mm 0;
+  orphans: 3;
+  widows: 3;
+}
+.doc strong { font-weight: 700; color: var(--fg); }
+.doc em { font-style: italic; }
+
+/* ---------- Inline code ---------- */
+.doc code {
+  font-family: var(--font-mono);
+  font-size: 9.4pt;
+  background: var(--surface-2);
+  border: 1px solid var(--border);
+  border-radius: 4px;
+  padding: 0.5pt 4pt;
+  color: var(--fg-2);
+  font-feature-settings: "ss06";
+  white-space: nowrap;
+}
+
+/* ---------- Code blocks ---------- */
+.doc pre {
+  font-family: var(--font-mono);
+  font-size: 9pt;
+  line-height: 1.55;
+  background: var(--surface-2);
+  border: 1px solid var(--border);
+  border-left: 3px solid var(--orange);
+  border-radius: 6px;
+  padding: 4mm 5mm;
+  margin: 4mm 0 5mm 0;
+  overflow: visible;
+  white-space: pre-wrap;
+  word-wrap: break-word;
+  page-break-inside: avoid;
+  break-inside: avoid;
+  color: var(--fg);
+}
+.doc pre code {
+  background: transparent;
+  border: 0;
+  padding: 0;
+  font-size: inherit;
+  color: inherit;
+  white-space: pre-wrap;
+}
+/* Pygments code highlighting tuned to brand */
+.doc pre .kw, .doc pre .k    { color: var(--orange); font-weight: 600; }
+.doc pre .nf, .doc pre .nc   { color: var(--blue); }
+.doc pre .s, .doc pre .s2    { color: var(--green); }
+.doc pre .mi, .doc pre .mf, .doc pre .m { color: var(--purple); }
+.doc pre .c1, .doc pre .c, .doc pre .cm { color: var(--fg-faint); font-style: italic; }
+.doc pre .o                  { color: var(--fg-muted); }
+
+/* ---------- Lists ---------- */
+.doc ul, .doc ol {
+  margin: 2mm 0 4mm 0;
+  padding-left: 6mm;
+}
+.doc ul li, .doc ol li {
+  margin-bottom: 1.5mm;
+  line-height: 1.55;
+}
+.doc ul li::marker { color: var(--orange); }
+.doc ol li::marker { color: var(--orange); font-weight: 600; }
+.doc ul ul, .doc ol ol, .doc ul ol, .doc ol ul {
+  margin: 1mm 0 1mm 0;
+}
+
+/* ---------- Blockquote ---------- */
+.doc blockquote {
+  margin: 4mm 0;
+  padding: 3mm 5mm 3mm 6mm;
+  border-left: 3px solid var(--orange);
+  background: var(--orange-bg);
+  color: var(--fg-2);
+  border-radius: 0 6px 6px 0;
+  page-break-inside: avoid;
+  break-inside: avoid;
+}
+.doc blockquote p { margin: 0 0 2mm 0; }
+.doc blockquote p:last-child { margin-bottom: 0; }
+.doc blockquote strong { color: var(--orange); }
+
+/* ---------- Horizontal rule ---------- */
+.doc hr {
+  border: 0;
+  border-top: 1px solid var(--border);
+  margin: 4mm 0;
+  height: 0;
+}
+
+/* ---------- Links ---------- */
+.doc a {
+  color: var(--orange);
+  text-decoration: none;
+  border-bottom: 0.5px solid rgba(228,95,26,0.35);
+}
+.doc a:hover { color: var(--orange-soft); }
+
+/* ---------- Tables ---------- */
+.doc table {
+  width: 100%;
+  border-collapse: collapse;
+  margin: 4mm 0 6mm 0;
+  font-size: 9.5pt;
+  line-height: 1.45;
+  page-break-inside: auto;
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  overflow: hidden;
+  background: var(--bg);
+}
+.doc table thead {
+  display: table-header-group;
+}
+.doc table tr {
+  page-break-inside: avoid;
+  break-inside: avoid;
+}
+.doc table th {
+  background: var(--surface-2);
+  color: var(--fg);
+  text-align: left;
+  font-weight: 700;
+  font-size: 8.5pt;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  padding: 3mm 4mm;
+  border-bottom: 1px solid var(--border-strong);
+  border-right: 1px solid var(--border);
+}
+.doc table th:last-child { border-right: 0; }
+.doc table td {
+  padding: 3mm 4mm;
+  border-bottom: 1px solid var(--border);
+  border-right: 1px solid var(--border);
+  vertical-align: top;
+  color: var(--fg-2);
+}
+.doc table td:last-child { border-right: 0; }
+.doc table tbody tr:last-child td { border-bottom: 0; }
+.doc table tbody tr:nth-child(even) td {
+  background: var(--surface-1);
+}
+.doc table strong { color: var(--fg); font-weight: 700; }
+.doc table code {
+  font-size: 8.8pt;
+  white-space: normal;
+  border: 0;
+  padding: 0.5pt 3pt;
+  background: var(--surface-3);
+}
+
+/* Numeric / mono columns */
+.doc table td.num, .doc table .num { font-family: var(--font-mono); font-feature-settings: "tnum"; text-align: right; }
+
+/* ---------- Internal Table of Contents (the markdown TOC list right after intro) ---------- */
+.doc .toc-section {
+  page-break-before: avoid;
+  break-before: avoid;
+  margin-top: 0;
+}
+.doc .toc-section h2 {
+  font-size: 22pt;
+  font-weight: 700;
+  margin-top: 4mm;
+  letter-spacing: -0.018em;
+  border: 0;
+  padding-left: 4mm;
+}
+
+/* Pandoc nested TOC list — neutralize markers and beautify */
+.doc .toc-section ul {
+  list-style: none;
+  padding-left: 0;
+  margin: 6mm 0 0 0;
+  column-count: 1;
+}
+.doc .toc-section > ul > li {
+  font-family: var(--font-display);
+  font-size: 13pt;
+  font-weight: 700;
+  margin: 5mm 0 2mm 0;
+  color: var(--orange);
+  letter-spacing: -0.005em;
+  page-break-inside: avoid;
+  break-inside: avoid;
+}
+.doc .toc-section > ul > li > a {
+  color: var(--orange);
+  border-bottom: 0;
+}
+.doc .toc-section ul ul {
+  margin: 1mm 0 0 0;
+  padding-left: 4mm;
+  list-style: none;
+}
+.doc .toc-section ul ul li {
+  font-family: var(--font-sans);
+  font-size: 10pt;
+  font-weight: 500;
+  color: var(--fg-2);
+  margin: 0.5mm 0;
+  padding-left: 0;
+  letter-spacing: 0;
+}
+.doc .toc-section ul ul li a {
+  color: var(--fg-2);
+  border-bottom: 0;
+  display: inline-block;
+  position: relative;
+  padding-right: 2mm;
+}
+.doc .toc-section ul ul li a:hover { color: var(--orange); }
+
+/* ---------- Pandoc-generated header anchors ---------- */
+.doc .header-anchor { display: none; }
+.doc .doc-toc + p { margin-top: 4mm; }
+
+/* ---------- Useful semantic add-ons (auto-classed by post-processing if needed) ---------- */
+.callout {
+  border: 1px solid var(--orange-bd);
+  background: var(--orange-bg);
+  border-left: 3px solid var(--orange);
+  padding: 4mm 5mm;
+  border-radius: 6px;
+  margin: 4mm 0;
+  font-size: 10pt;
+  page-break-inside: avoid;
+  break-inside: avoid;
+}
+.callout-title {
+  display: block;
+  font-weight: 700;
+  color: var(--orange);
+  margin-bottom: 2mm;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  font-size: 8.5pt;
+}
+
+/* Tag-like badges for [BENCH] / [TARGET] inline tokens — applied via post-processing */
+.doc .tag-bench, .doc .tag-target {
+  display: inline-block;
+  font-family: var(--font-mono);
+  font-size: 8pt;
+  font-weight: 600;
+  padding: 0.5pt 5pt;
+  border-radius: 3px;
+  letter-spacing: 0.05em;
+  margin: 0 2pt;
+  vertical-align: 0.5pt;
+}
+.doc .tag-bench  { background: rgba(31,134,204,0.10);  color: var(--blue);   border: 1px solid rgba(31,134,204,0.30); }
+.doc .tag-target { background: var(--orange-bg);       color: var(--orange); border: 1px solid var(--orange-bd); }
+
+/* ---------- Image handling ---------- */
+.doc img {
+  max-width: 100%;
+  height: auto;
+  margin: 4mm auto;
+  display: block;
+  border-radius: 6px;
+  border: 1px solid var(--border);
+}
+
+/* ---------- Definition lists ---------- */
+.doc dl { margin: 3mm 0; }
+.doc dt { font-weight: 700; color: var(--fg); margin-top: 3mm; }
+.doc dd { margin: 1mm 0 0 8mm; color: var(--fg-2); }
+
+/* ---------- Print-only page break helpers (used by inline classes) ---------- */
+.page-break { page-break-before: always; break-before: page; height: 0; }
+.no-break  { page-break-inside: avoid; break-inside: avoid; }
+
+/* ---------- Footer page strip (visual band on first content page) ---------- */
+.doc-intro {
+  background: var(--surface-1);
+  border: 1px solid var(--border);
+  border-left: 3px solid var(--orange);
+  border-radius: 6px;
+  padding: 5mm 6mm;
+  margin: 0 0 8mm 0;
+  font-size: 11pt;
+  line-height: 1.6;
+  color: var(--fg-2);
+}
+.doc-intro p { margin: 0 0 2mm 0; }
+.doc-intro p:last-child { margin: 0; }
+.doc-intro strong { color: var(--orange); }
+
+/* =========================================================================
+   APPENDIX — The Vision in Frames
+   ========================================================================= */
+
+@page divider { margin: 0; }
+
+.appendix-divider {
+  page: divider;
+  page-break-before: always;
+  break-before: page;
+  page-break-after: always;
+  break-after: page;
+  height: 297mm;
+  width: 210mm;
+  margin: 0;
+  background: var(--surface-2);
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  padding: 0 30mm;
+  color: var(--fg);
+  overflow: hidden;
+}
+.appendix-divider .ap-grid {
+  position: absolute;
+  inset: 0;
+  background-image:
+    linear-gradient(to right, rgba(228,95,26,0.05) 1px, transparent 1px),
+    linear-gradient(to bottom, rgba(228,95,26,0.05) 1px, transparent 1px);
+  background-size: 18mm 18mm;
+  pointer-events: none;
+}
+.appendix-divider .ap-glow {
+  position: absolute;
+  top: -100mm; right: -80mm;
+  width: 220mm; height: 220mm;
+  border-radius: 50%;
+  background: radial-gradient(circle at center, rgba(228,95,26,0.12), transparent 60%);
+  pointer-events: none;
+}
+.appendix-divider .ap-glow-2 {
+  position: absolute;
+  bottom: -80mm; left: -60mm;
+  width: 180mm; height: 180mm;
+  border-radius: 50%;
+  background: radial-gradient(circle at center, rgba(228,95,26,0.06), transparent 60%);
+  pointer-events: none;
+}
+.appendix-divider .ap-eyebrow {
+  position: relative;
+  font-family: var(--font-mono);
+  font-size: 10pt;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.22em;
+  color: var(--orange);
+  margin-bottom: 8mm;
+}
+.appendix-divider .ap-title {
+  position: relative;
+  font-family: var(--font-display);
+  font-size: 38pt;
+  font-weight: 700;
+  letter-spacing: -0.025em;
+  line-height: 1.05;
+  margin: 0 0 8mm 0;
+  max-width: 150mm;
+  color: var(--fg);
+}
+.appendix-divider .ap-title .accent { color: var(--orange); }
+.appendix-divider .ap-lede {
+  position: relative;
+  font-family: var(--font-sans);
+  font-size: 13pt;
+  line-height: 1.6;
+  color: var(--fg-2);
+  max-width: 145mm;
+  margin: 0 0 12mm 0;
+}
+.appendix-divider .ap-frames {
+  position: relative;
+  font-family: var(--font-mono);
+  font-size: 10pt;
+  color: var(--fg-2);
+  letter-spacing: 0.02em;
+  line-height: 1.95;
+  border-left: 2px solid var(--orange);
+  padding-left: 6mm;
+  max-width: 145mm;
+  list-style: none;
+  margin: 0;
+}
+.appendix-divider .ap-frames li { margin: 0; padding: 0; }
+.appendix-divider .ap-frames .ap-frame-num {
+  color: var(--orange);
+  font-weight: 700;
+  margin-right: 8pt;
+  display: inline-block;
+  min-width: 22pt;
+}
+
+/* Inline appendix banner — sits above Frame 01 only, no separate page */
+.appendix-banner {
+  margin: 0 0 5mm 0;
+  padding: 0 0 3.5mm 0;
+  border-bottom: 1px solid var(--border);
+}
+.appendix-banner-eyebrow {
+  font-family: var(--font-mono);
+  font-size: 8pt;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.22em;
+  color: var(--orange);
+  margin: 0 0 1.5mm 0;
+}
+.appendix-banner-title {
+  font-family: var(--font-display);
+  font-size: 18pt;
+  font-weight: 700;
+  letter-spacing: -0.018em;
+  line-height: 1.15;
+  color: var(--fg);
+  margin: 0 0 1.5mm 0;
+}
+.appendix-banner-title .accent { color: var(--orange); }
+.appendix-banner-lede {
+  font-family: var(--font-sans);
+  font-size: 9.5pt;
+  line-height: 1.5;
+  color: var(--fg-2);
+  max-width: 165mm;
+  margin: 0;
+}
+
+/* Per-screenshot page */
+.frame-page {
+  page-break-before: always;
+  break-before: page;
+  page-break-inside: avoid;
+  break-inside: avoid;
+  padding-top: 2mm;
+}
+.frame-page .frame-eyebrow {
+  font-family: var(--font-mono);
+  font-size: 8pt;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.18em;
+  color: var(--orange);
+  margin: 0 0 1.5mm 0;
+}
+.frame-page .frame-title {
+  font-family: var(--font-display);
+  font-size: 15pt;
+  font-weight: 700;
+  letter-spacing: -0.01em;
+  line-height: 1.2;
+  margin: 0 0 2mm 0;
+  color: var(--fg);
+  padding-left: 3.5mm;
+  border-left: 3px solid var(--orange);
+}
+.frame-page .frame-caption {
+  font-family: var(--font-sans);
+  font-size: 9.5pt;
+  line-height: 1.5;
+  color: var(--fg-2);
+  max-width: 175mm;
+  margin: 0 0 2.5mm 3.5mm;
+}
+.frame-page .frame-caption strong { color: var(--fg); font-weight: 700; }
+.frame-page .frame-caption code {
+  font-family: var(--font-mono);
+  font-size: 8.6pt;
+  background: var(--surface-2);
+  border: 1px solid var(--border);
+  padding: 0.5pt 3pt;
+  border-radius: 3px;
+  white-space: nowrap;
+}
+
+.frame-shot-wrap {
+  margin: 0 auto;
+  max-width: 174mm;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  overflow: hidden;
+  background: var(--surface-2);
+  box-shadow: 0 1px 0 rgba(15,17,23,0.05), 0 0 0 1px rgba(0,0,0,0.02);
+}
+.frame-shot {
+  display: block;
+  width: 100%;
+  height: auto;
+  margin: 0;
+  border: 0;
+  border-radius: 0;
+}
+
+/* Tag chips beneath caption */
+.frame-tags {
+  display: flex;
+  gap: 5pt;
+  flex-wrap: wrap;
+  margin: 0 0 3mm 3.5mm;
+}
+.frame-tag {
+  font-family: var(--font-mono);
+  font-size: 7.5pt;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.10em;
+  padding: 1pt 6pt;
+  border-radius: 3px;
+  background: var(--orange-bg);
+  color: var(--orange);
+  border: 1px solid var(--orange-bd);
+  white-space: nowrap;
+}
+.frame-tag.tag-neutral {
+  background: var(--surface-2);
+  color: var(--fg-muted);
+  border-color: var(--border);
+}
+</style>
+</head>
+<body>
+<div class="run-head"><span class="run-brand">ContextD</span><span class="sep">·</span>Technical Specification</div><div class="run-meta">v1.0</div>
+<section class="cover">
+  <div class="cover-grid"></div>
+  <div class="cover-glow"></div>
+  <div class="cover-glow-2"></div>
+
+  <header class="cover-top">
+    <div class="brand-name">Context<span class="brand-d">D</span></div>
+  </header>
+
+  <div class="cover-mid">
+    <div class="cover-eyebrow">Technical Specification · v1.0</div>
+    <h1 class="cover-title">The Context Graph<br/>Database <span class="accent">for AI</span></h1>
+    <p class="cover-subtitle">ContextD is a database purpose-built for AI context. It ingests enterprise data through a 10-step pipeline, structures it into a bitemporal knowledge graph with decision lineage and cross-source identity resolution, learns from feedback what matters, and serves agents structured context windows via SDK, REST API, and MCP Server.</p>
+    <p class="cover-positioning">
+      MongoDB owns documents. Pinecone owns vectors. Neo4j owns graphs.
+      <strong>ContextD owns context.</strong>
+    </p>
+  </div>
+
+  <footer class="cover-bottom">
+    <div class="cover-edition">v1.0 · April 29, 2026</div>
+  </footer>
+</section>
+<article class="doc">
+<section class="toc-section">
+<h2>Contents</h2>
+<ul>
+<li><a href="#part-i-fundamentals">Part I — Fundamentals</a>
+<ul>
+<li><a href="#the-problem">1. The Problem</a></li>
+<li><a href="#the-solution">2. The Solution</a></li>
+</ul>
+</li>
+<li><a href="#part-ii-architecture">Part II — Architecture</a>
+<ul>
+<li><a href="#system-architecture">3. System Architecture</a></li>
+<li><a href="#the-database-engine">4. The Database Engine</a></li>
+<li><a href="#the-data-model">5. The Data Model</a></li>
+<li><a href="#the-bitemporal-time-model">6. The Bitemporal Time Model</a></li>
+</ul>
+</li>
+<li><a href="#part-iii-core-systems">Part III — Core Systems</a>
+<ul>
+<li><a href="#data-ingestion-the-10-step-pipeline">7. Data Ingestion — The 10-Step Pipeline</a></li>
+<li><a href="#context-forge-pre-pipeline-mapping">8. Context Forge — Pre-Pipeline Mapping</a></li>
+<li><a href="#context-resolver-cross-source-identity-stitching">9. Context Resolver — Cross-Source Identity Stitching</a></li>
+<li><a href="#retrieval-context-assembly">10. Retrieval &amp; Context Assembly</a></li>
+<li><a href="#feedback-ontology-context-cores">11. Feedback, Ontology &amp; Context Cores</a></li>
+</ul>
+</li>
+<li><a href="#part-iv-validation-capabilities">Part IV — Validation &amp; Capabilities</a>
+<ul>
+<li><a href="#benchmarks-and-validation">12. Benchmarks and Validation</a></li>
+<li><a href="#distinguishing-capabilities">13. Distinguishing Capabilities</a></li>
+</ul>
+</li>
+<li><a href="#part-v-integration-operations">Part V — Integration &amp; Operations</a>
+<ul>
+<li><a href="#integration-paths">14. Integration Paths</a></li>
+<li><a href="#deployment-security-rbac">15. Deployment, Security &amp; RBAC</a></li>
+</ul>
+</li>
+</ul>
+</section>
+<h1 id="part-i-fundamentals" class="part-title">Part I — Fundamentals</h1>
+<h2 id="the-problem">1. The Problem</h2>
+<p>AI agents work with the wrong context. Every current approach fails in a specific, predictable way:</p>
+<table style="width:100%;">
+<colgroup>
+<col style="width: 25%" />
+<col style="width: 33%" />
+<col style="width: 41%" />
+</colgroup>
+<thead>
+<tr>
+<th>Approach</th>
+<th>What It Does</th>
+<th>What It Misses</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>Vector Search</strong> (Pinecone, Weaviate)</td>
+<td>Retrieves ~1,000 similar chunks</td>
+<td>No relationships, no time, no structure. “Mercury” returns planet, element, and car — all equally ranked.</td>
+</tr>
+<tr>
+<td><strong>Graph Databases</strong> (Neo4j, Neptune)</td>
+<td>Stores entity relationships</td>
+<td>No temporal awareness, no decision lineage, not AI-native. SSPL restricts embedding.</td>
+</tr>
+<tr>
+<td><strong>RAG Frameworks</strong> (LangChain, LlamaIndex)</td>
+<td>Orchestrates retrieval + LLM</td>
+<td>Framework only — no persistent data layer, no context storage, no learning. Every query starts from scratch.</td>
+</tr>
+<tr>
+<td><strong>Multi-DB Assembly</strong> (Neo4j + Pinecone + custom)</td>
+<td>Cobbles together graph + vector + temporal logic</td>
+<td>3+ databases, no cross-model ACID, consistency gaps, 3× infra cost. Graph and vectors can silently disagree.</td>
+</tr>
+</tbody>
+</table>
+<p>The core insight: AI agents don’t need “similar documents.” They need <strong>relationship-aware, temporally-grounded, ontology-constrained, feedback-weighted context assembly.</strong> That is not a feature you bolt onto an existing database. It requires a purpose-built system.</p>
+<h2 id="the-solution">2. The Solution</h2>
+<p>ContextD is a <strong>database</strong>, not a framework.</p>
+<table>
+<colgroup>
+<col style="width: 30%" />
+<col style="width: 69%" />
+</colgroup>
+<thead>
+<tr>
+<th>It Is</th>
+<th>What That Means</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>A <strong>database</strong></td>
+<td>Stores entities, relationships, facts, temporal state, decisions — with ACID transactions across six data models</td>
+</tr>
+<tr>
+<td>A <strong>context construction engine</strong></td>
+<td>Transforms raw enterprise data into a structured knowledge graph via a 10-step pipeline</td>
+</tr>
+<tr>
+<td>An <strong>AI-native query system</strong></td>
+<td>Hybrid retrieval (BM25 + vectors + graph traversal), not flat similarity search</td>
+</tr>
+<tr>
+<td>A <strong>temporal knowledge system</strong></td>
+<td>Bitemporal model — tracks both “when it was true” and “when we learned it”</td>
+</tr>
+<tr>
+<td>A <strong>learning system</strong></td>
+<td>Feedback-weighted graph that improves with every interaction</td>
+</tr>
+<tr>
+<td><strong>Versionable</strong></td>
+<td>Context Cores = CI/CD for your knowledge graph (build, test, promote, rollback)</td>
+</tr>
+</tbody>
+</table>
+<p>The system requires a multi-model storage engine providing graph, document, key-value, vector, time-series, and full-text search in a single ACID-transactional substrate. ContextD adds the intelligence layer — ingestion, resolution, ontology, feedback, context assembly, and decision lineage — on top of this storage foundation. Understanding how these layers fit together requires examining the architecture.</p>
+<hr />
+<h1 id="part-ii-architecture" class="part-title">Part II — Architecture</h1>
+<h2 id="system-architecture">3. System Architecture</h2>
+<h3 id="six-layer-stack">3.1 Six-Layer Stack</h3>
+<pre><code>┌──────────────────────────────────────────────────────────────────┐
+│ 1. INTEGRATION                                                    │
+│ Python SDK · MCP Server (stdio/SSE/HTTP) · REST API · GraphQL    │
+│ Wire Protocols: Bolt · PostgreSQL · MongoDB · Redis · gRPC · HTTP │
+├──────────────────────────────────────────────────────────────────┤
+│ 2. RBAC &amp; AUTH                                                    │
+│ Tenant isolation · Identity federation · Permission enforcement   │
+├──────────────────────────────────────────────────────────────────┤
+│ 3. CONTEXTD ENGINE                                                │
+│ Ingestion → Normalization → Enrichment → Storage → Retrieval      │
+├──────────────────────────────────────────────────────────────────┤
+│ 4. UNIFIED MULTI-MODEL STORAGE SUBSTRATE                          │
+│ Single ACID engine: Graph · Vector (HNSW/PQ) · Full-Text (BM25)  │
+│ · Document · Key-Value · Time-Series (Gorilla XOR)                │
+│ 70+ SIMD-accelerated graph algorithms                             │
+├──────────────────────────────────────────────────────────────────┤
+│ 5. CONTEXT FORGE                                                  │
+│ Pre-pipeline source mapping · Schema inference · Curation UI      │
+├──────────────────────────────────────────────────────────────────┤
+│ 6. CONNECTOR LAYER                                                │
+│ Airbyte (600+ sources) · 6 Custom P0 Connectors · OAuth2 (30+)   │
+└──────────────────────────────────────────────────────────────────┘</code></pre>
+<h3 id="current-stack-vs-the-unified-substrate">3.2 Current Stack vs the Unified Substrate</h3>
+<p>The current production stack uses PostgreSQL for tenant metadata, Neo4j for graph and full-text, Milvus for vectors, Redis for hot caching, and Temporal for durable workers. The migration target is a single multi-model engine that subsumes Neo4j and Milvus into one ACID-transactional engine. Redis and Temporal remain in their orthogonal roles.</p>
+<p>Why this migration matters: <strong>cross-model ACID</strong> (one transaction updates graph, vectors, full-text, and audit log under one WAL fsync), <strong>schema drift elimination</strong> (no divergence across separate databases), <strong>latency reduction</strong> (queries no longer cross 3-5 network hops), and <strong>license clarity</strong> (Apache 2.0 substrate eliminates SSPL/Commons-Clause entanglements).</p>
+<h3 id="the-closed-loop">3.3 The Closed Loop</h3>
+<p>The system is not a pipeline — it is a closed loop. Feedback from queries writes back to graph weights. Ontology constraints are invoked during ingestion. Context Forge ensures customer-owned schema work is honored. Context Cores snapshot the entire state. Every retrieval informs the next.</p>
+<pre><code>CONNECTOR     CONTEXT FORGE        INGESTION PIPELINE                QUERY ENGINE
+Snowflake ─┐                                                          Natural Language Query
+Postgres  ─┤  ┌─ Introspect ─┐                                              │
+SFDC      ─┼─►├─ Profile ────┼─► Forge        ┌─ Step 1: Episode             ▼
+HubSpot   ─┤  ├─ Ingest BL ──┤   Mapping ────►├─ Step 2: Retrieve Context  Hybrid Search
+Gmail     ─┤  ├─ Infer (7) ──┤  (versioned    ├─ Step 3: Extract ◄ Forge   ◄ feedback
+Slack     ─┘  └─ Studio ─────┘   msgpack +     │     +Ontology               ▼
+                       ↑          SHA-256)      ├─ Step 4: Resolve (det.)   Reranker
+                  Customer review               ├─ Step 5: Resolve(sem+LLM)  ▼
+                  / edit / approve              ├─ Step 6: Edges  ◄ Forge   Apply Feedback
+                                                 ├─ Step 7: Dedup/Invalidate ▼
+                                                 ├─ Step 8: Embeddings        Token-Budget Prune
+                                                 ├─ Step 9: Save ──────────► ▼
+                                                 ├─ Forge-derived facts       Context Window
+                                                 └─ Step 10: Communities       ▼
+                                                                          Agent Rates (1-5)
+              CONTEXT CORES                                                    │
+              Build  ◄── Snapshot ◄── Graph Storage                            ▼
+              Test   ◄── Query Suite                                    EMA Weight Update
+              Promote ──► Production                                       per node &amp; edge
+              Rollback ◄── Previous Version                               ──► Graph Storage</code></pre>
+<p>The architecture defines the boundaries. What happens <em>inside</em> those boundaries — the storage engine, the data model, and the temporal system — is where ContextD’s structural advantages emerge.</p>
+<h2 id="the-database-engine">4. The Database Engine</h2>
+<h3 id="multi-model-unification">4.1 Multi-Model Unification</h3>
+<p>Six data models — record buckets, LSM range indexes, LSM full-text indexes, HNSW vector indexes, time-series shards, and string dictionaries — share one storage substrate. Every storable construct is a <code>Component</code> that owns files, participates in the page cache, registers for file locks, and writes WAL deltas identically.</p>
+<p>This is what makes <strong>cross-model ACID</strong> real: a single transaction can simultaneously append a record, update adjacency segments, insert into secondary indexes, add a vector embedding, update the full-text index, emit a time-series sample, adjust a feedback weight, and append an audit entry — all under one <code>txId</code> with one WAL fsync.</p>
+<h3 id="provenance">4.2 Provenance</h3>
+<p>Every record carries provenance metadata: source pipeline, source task, extraction method (deterministic / LLM / forge-derived / ontology-constrained / manual / structured import), and a RID back to the originating Episode. A secondary index on <code>source_episode_id</code> supports “give me everything derived from episode X.” This provenance system is what makes audit and compliance possible — for any piece of knowledge in the graph, you can trace exactly where it came from.</p>
+<h3 id="decision-lineage-as-first-class-data">4.3 Decision Lineage as First-Class Data</h3>
+<p>Decisions are not text in audit logs. They are typed entities with a strict schema and dedicated indexing:</p>
+<pre><code>Decision {
+  id                  (RID)
+  decision_type       approval | exception | selection | commitment | rejection
+  subject             what was decided
+  outcome             the result
+  decided_at          timestamp
+  exception           boolean — was standard policy overridden?
+  justification       text — required if exception=true
+  confidence          float — 1.0 for explicit; lower for inference-derived
+  superseded_by       nullable RID → another Decision
+  valid_at / invalid_at / created_at / expired_at    bitemporal
+  source_pipeline, source_task, extraction_method     provenance
+}</code></pre>
+<p>Four typed edges connect a Decision into the broader graph: <strong>DECIDED_BY</strong> → Person, <strong>INFORMED_BY</strong> → array of Fact/Episode RIDs, <strong>APPLIED_POLICY</strong> → Policy entity (versioned), <strong>AFFECTED</strong> → array of Entity RIDs.</p>
+<p>A <strong>decision lineage walk</strong> traverses backward through INFORMED_BY edges, recovering every fact, episode, and policy that informed the decision. Typical decisions touch 10-50 vertices; the walk completes in &lt;10ms. A <strong>decision impact walk</strong> traverses forward through AFFECTED edges, finding every entity touched and every downstream decision conditioned on them — used for audit replay.</p>
+<p>The engine stores all of this data using a consistent schema. Understanding that schema — the seven primitives and how they connect — is essential to understanding how ContextD reasons about context.</p>
+<h2 id="the-data-model">5. The Data Model</h2>
+<p>Everything in ContextD is one of seven primitives. Each carries bitemporal metadata, provenance stamps, and feedback weights.</p>
+<h3 id="entity-node-the-nouns">Entity (Node) — the nouns</h3>
+<p>People, companies, projects, tickets, deals, documents.</p>
+<pre><code>Entity {
+  id: UUID [PK]             canonical_id: UUID (resolved identity after dedup)
+  entity_type: STRING       name: STRING         labels: [STRING]
+  summary: STRING           name_embedding: [FLOAT]   source: STRING
+  feedback_weight: FLOAT [0.0-1.0], default 0.5       confidence: FLOAT
+  valid_at / invalid_at     created_at / expired_at
+  source_pipeline, source_task, extraction_method
+}</code></pre>
+<p><code>canonical_id</code> is the key: when “John Smith” appears in Salesforce, “<a href="mailto:john@acme.com" class="email">john@acme.com</a>” in Gmail, and “john.smith” in Slack, the entity resolution pipeline merges them into one canonical entity.</p>
+<h3 id="relationship-edge-the-verbs">Relationship (Edge) — the verbs</h3>
+<p>Typed, directed connections. Each carries a natural-language <code>fact</code> field enabling hybrid search over relationships — BM25 matches keywords, cosine matches meaning.</p>
+<pre><code>Relationship {
+  source_entity_id → target_entity_id: UUID
+  relationship_type: STRING       fact: STRING       fact_embedding: [FLOAT]
+  weight / feedback_weight: FLOAT       episodes: [UUID]
+  valid_at, invalid_at, created_at, expired_at
+  reference_time, source, extraction_method, source_pipeline, source_task
+}</code></pre>
+<h3 id="fact-atomic-time-bounded-claims">Fact — atomic, time-bounded claims</h3>
+<p>The ground truth that relationships and entities are built from.</p>
+<pre><code>Fact {
+  subject_entity_id: UUID    predicate: STRING    object: STRING|UUID
+  valid_at, invalid_at, created_at, expired_at
+  confidence, feedback_weight    source_episode_id    extraction_method
+}</code></pre>
+<h3 id="episode-raw-source-events">Episode — raw source events</h3>
+<p>Every email, message, ticket, commit. All other primitives are <em>derived</em> from episodes via the ingestion pipeline. Full provenance chains back to these.</p>
+<h3 id="saga-narrative-continuity">Saga — narrative continuity</h3>
+<p>Storylines spanning multiple episodes. “The Acme deal negotiation” — 47 emails over 3 months — gets an incrementally-updated summary plus temporal episode chains via <code>NEXT_EPISODE</code> edges.</p>
+<h3 id="community-structural-clusters">Community — structural clusters</h3>
+<p>Groups of related entities discovered by Louvain or Label Propagation (SIMD-accelerated). LLM-generated summaries. Macro-level navigation for large graphs.</p>
+<h3 id="schema-relationships">Schema Relationships</h3>
+<pre><code>Episode ──extracts──► Entity · Fact · Relationship
+Entity ──has_fact──► Fact             Entity ──related_to──► Entity
+Saga ──has_episode──► Episode ──next_episode──► Episode
+Community ──has_member──► Entity      Fact ──superseded_by──► Fact
+Decision ──informed_by──► Fact · Episode
+Decision ──decided_by──► Entity       Decision ──applied_policy──► Entity
+Decision ──affected──► Entity         Ontology ──constrains──► Ingestion Pipeline</code></pre>
+<p>Every primitive carries four timestamp columns. That temporal model — bitemporal storage — is the most powerful and most misunderstood feature in the system.</p>
+<h2 id="the-bitemporal-time-model">6. The Bitemporal Time Model</h2>
+<p>Every entity, relationship, and fact tracks two independent time dimensions:</p>
+<table>
+<colgroup>
+<col style="width: 39%" />
+<col style="width: 28%" />
+<col style="width: 32%" />
+</colgroup>
+<thead>
+<tr>
+<th>Dimension</th>
+<th>Fields</th>
+<th>Meaning</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>Event Time</strong></td>
+<td><code>valid_at</code> → <code>invalid_at</code></td>
+<td>When was this true <strong>in the real world</strong>?</td>
+</tr>
+<tr>
+<td><strong>Transaction Time</strong></td>
+<td><code>created_at</code> → <code>expired_at</code></td>
+<td>When did <strong>we</strong> record/learn/supersede this?</td>
+</tr>
+</tbody>
+</table>
+<p>A fact is <em>current</em> when <code>invalid_at IS NULL AND expired_at IS NULL</code>. A fact was <em>true at date T</em> when <code>valid_at &lt;= T AND (invalid_at IS NULL OR invalid_at &gt; T)</code>. A fact was <em>known to us at date T</em> when <code>created_at &lt;= T AND (expired_at IS NULL OR expired_at &gt; T)</code>.</p>
+<p>Supersession is insert-not-update: the old fact gets <code>expired_at = now()</code> and <code>invalid_at = new_fact.valid_at</code>; the new fact is inserted alongside. Both coexist (~2× write amplification per mutation). Nothing is ever deleted.</p>
+<h3 id="four-index-designs-for-four-access-patterns">Four Index Designs for Four Access Patterns</h3>
+<ol type="1">
+<li><strong>Current state</strong> — partial index on <code>(subject, predicate, expired_at IS NULL)</code></li>
+<li><strong>Historical state at T</strong> — composite on <code>(subject, predicate, valid_at desc, invalid_at desc)</code></li>
+<li><strong>Knowledge state at T</strong> — composite on <code>(subject, predicate, created_at desc, expired_at desc)</code></li>
+<li><strong>Audit trail</strong> — covered by #3 with reverse scan</li>
+</ol>
+<p>A <strong>bitemporal query rewriter</strong> translates <code>AS OF SYSTEM TIME</code> / <code>AS OF VALID TIME</code> into the appropriate index scans.</p>
+<h3 id="supersession-walkthrough">Supersession Walkthrough</h3>
+<pre><code>t=1 (Jan 15)  Email: &quot;Acme&#39;s annual budget is $5M&quot;
+              → Fact: {object: &quot;$5M&quot;, valid_at: Jan-01, invalid_at: NULL,
+                       created_at: Jan-15, expired_at: NULL}
+
+t=2 (Apr 3)   Email: &quot;Acme increased their budget to $7M&quot;
+              → Old fact: expired_at = Apr-03, invalid_at = Apr-01
+              → New fact: {object: &quot;$7M&quot;, valid_at: Apr-01, invalid_at: NULL,
+                           created_at: Apr-03, expired_at: NULL}</code></pre>
+<table>
+<colgroup>
+<col style="width: 28%" />
+<col style="width: 36%" />
+<col style="width: 36%" />
+</colgroup>
+<thead>
+<tr>
+<th>Query</th>
+<th>Answers</th>
+<th>Returns</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Current state</td>
+<td>“What is Acme’s budget?”</td>
+<td>$7M</td>
+</tr>
+<tr>
+<td>Historical state</td>
+<td>“What was the budget on Feb 1?”</td>
+<td>$5M</td>
+</tr>
+<tr>
+<td>Knowledge state</td>
+<td>“What did we know on Mar 1?”</td>
+<td>$5M (hadn’t learned about increase)</td>
+</tr>
+<tr>
+<td>Audit</td>
+<td>“When did we learn about $7M?”</td>
+<td>April 3, 2026</td>
+</tr>
+</tbody>
+</table>
+<p>Without bitemporal, an agent cannot distinguish “Alice left Acme in March” from “we learned in June that Alice left in March.” When making decisions based on what was known at the time of a past decision, the agent must query knowledge state — not current state. This is the temporal foundation that makes decision lineage meaningful.</p>
+<p>With the architecture, engine, data model, and temporal system established, the next question is: how does data actually enter the graph?</p>
+<hr />
+<h1 id="part-iii-core-systems" class="part-title">Part III — Core Systems</h1>
+<h2 id="data-ingestion-the-10-step-pipeline">7. Data Ingestion — The 10-Step Pipeline</h2>
+<pre><code>Raw Data → [1]  Create Episode
+         → [2]  Retrieve Context (previous episodes for continuity)
+         → [3]  Extract Nodes (LLM ◄── Ontology Engine constrains)
+         → [4]  Resolve Entities — Deterministic (exact, entropy gate, MinHash)
+         → [5]  Resolve Entities — Semantic + LLM (cosine, LLM final)
+         → [6]  Extract Edges (LLM ◄── Ontology Engine constrains)
+         → [7]  Resolve/Dedup Edges (hybrid search → supersede contradictions)
+         → [8]  Generate Embeddings (parallel batch → HNSW)
+         → [9]  Save to Graph (bulk write with full provenance)
+         → [10] Community Detection (Louvain/LP → LLM summary)</code></pre>
+<p>Every step is wrapped in an OpenTelemetry span. Every element carries <code>source_pipeline</code>, <code>source_task</code>, <code>extraction_method</code>, <code>source_episode_id</code>.</p>
+<h3 id="entity-resolution-the-5-phase-cascade">Entity Resolution — The 5-Phase Cascade</h3>
+<p>Steps 4 and 5 implement a cascading dedup strategy that reduces LLM calls by ~80%:</p>
+<pre><code>New Entity
+   │
+   ▼
+[Phase 1: Exact Match] ──── match? → MERGE  (free, instant, 100% accuracy)
+   │ no match
+   ▼
+[Phase 2: Entropy Gate] ─── entropy &lt; 1.5 bits or &lt; 6 chars? → SKIP FUZZY
+   │ passes gate
+   ▼
+[Phase 3: MinHash/LSH] ──── Jaccard ≥ 0.9? → MERGE  (cheap, deterministic, ~95%)
+   │ no match
+   ▼
+[Phase 4: Cosine Similarity] ── ≥ 0.6? → CANDIDATE (up to 15)
+   │ candidates found
+   ▼
+[Phase 5: LLM Final] ────── LLM says same? → MERGE; else → CREATE NEW</code></pre>
+<p>Parameters: MinHash with 3-gram shingles, 32 permutations, LSH band size 4, Jaccard threshold 0.9. Cosine on name embeddings (1536-dim), threshold 0.6, max 15 candidates. Entropy gate: Shannon entropy &lt; 1.5 bits OR length &lt; 6 characters → skip fuzzy (prevents “Q1”, “API”, “USA” from entering unreliable fuzzy matching).</p>
+<p>Phases 1-3 handle ~80% of resolutions before LLM is called. This pipeline handles unstructured sources well, but structured enterprise sources — Postgres OLTP, Snowflake with 150-model dbt projects, Salesforce custom objects — deserve a different treatment. That’s what Context Forge provides.</p>
+<h2 id="context-forge-pre-pipeline-mapping">8. Context Forge — Pre-Pipeline Mapping</h2>
+<h3 id="why-context-forge-exists">Why Context Forge Exists</h3>
+<p>Treating every source as raw text and relying on LLM extraction fails for structured enterprise sources in three ways.</p>
+<p>It <strong>ignores schema knowledge</strong> — customers arrive with dbt projects, LookML models, and custom objects, and re-deriving via LLM discards their work.</p>
+<p>It <strong>misses business logic</strong> — most analytics value lives in derived metrics (LTV, MRR), not raw columns, and the LLM cannot reproduce customer-owned formulas.</p>
+<p>And <strong>enterprises do not trust black-box ingestion</strong> — regulated industries require auditable mappings.</p>
+<h3 id="the-four-stage-flow">The Four-Stage Flow</h3>
+<p>Context Forge runs once per source connection at onboarding, then re-runs incrementally when schema changes:</p>
+<pre><code>┌──────────────────────────────────────────────────────────────────┐
+│  Stage 1: INTROSPECTION                                          │
+│  Source Introspector + Data Profiler + Business Logic Ingester   │
+│  → Output: canonical Source Profile (schema graph + data stats   │
+│            + business logic DAG)                                 │
+├──────────────────────────────────────────────────────────────────┤
+│  Stage 2: INFERENCE                                              │
+│  Mapping Inference Engine (7 passes)                             │
+│  → Output: Candidate Forge Mapping                               │
+├──────────────────────────────────────────────────────────────────┤
+│  Stage 3: CURATION                                               │
+│  Forge Studio (3-pane review/edit UI)                            │
+│  → Output: Approved Forge Mapping                                │
+├──────────────────────────────────────────────────────────────────┤
+│  Stage 4: COMMIT                                                 │
+│  Versioned, content-addressed (msgpack + SHA-256), immutable     │
+│  Forge-to-Pipeline Bridge configures the 10-step pipeline        │
+└──────────────────────────────────────────────────────────────────┘</code></pre>
+<h3 id="components">Components</h3>
+<p><strong>Source Introspector</strong> connects to source systems, extracts schema metadata.</p>
+<p><strong>Data Profiler</strong> runs statistical analysis (type inference, cardinality, null ratio, value distribution) against 10K-100K row samples; samples are not retained after mapping is committed.</p>
+<p><strong>Business Logic Ingester</strong> accepts dbt models, LookML views, SQL views, DAX measures, stored procedures.</p>
+<p><strong>Mapping Inference Engine</strong> — seven inference passes:</p>
+<ol type="1">
+<li><strong>Table-to-Entity-Type classifier</strong> — heuristics + LLM-assisted naming</li>
+<li><strong>FK-to-Relationship classifier</strong> — direction, cardinality, ontology matches</li>
+<li><strong>Junction Table Detector</strong> — composite PK over exactly two FKs → bidirectional Relationships</li>
+<li><strong>Column-to-Fact-Predicate mapper</strong> — column → predicate, type → fact value type</li>
+<li><strong>Time-Series / Audit-Table Recognizer</strong> — monotonic timestamp + repeated entity FK → Episodes; <code>*_history</code> / <code>*_audit</code> → bitemporal hints</li>
+<li><strong>Derived-Metric Translator</strong> — each business logic metric → Derived Fact</li>
+<li><strong>Confidence Scoring</strong> — 0-1 per inference based on ontology match, naming, profile, LLM agreement</li>
+</ol>
+<p><strong>Forge Studio</strong> — three-pane UI: source schema (left), proposed mapping with confidence indicators (center), resulting graph preview (right). Includes validation panel, version diff, save/apply/export.</p>
+<p><strong>Forge Profiles</strong> — pre-built mappings for Salesforce CRM, HubSpot, Stripe, Shopify, Zendesk, Jira/Linear, dbt+Fivetran Snowflake, generic Postgres.</p>
+<p><strong>Forge-to-Pipeline Bridge</strong> — when applied, the mapping makes ingestion Steps 3 and 6 deterministic for known structures, <strong>reducing LLM cost by 60-80%</strong> for significant structured sources.</p>
+<p>Context Forge solves the problem of <em>getting structured data in</em>. But a harder problem remains: when the same entity appears across multiple sources with no shared ID, how do you know it’s the same person?</p>
+<h2 id="context-resolver-cross-source-identity-stitching">9. Context Resolver — Cross-Source Identity Stitching</h2>
+<p>Context Resolver turns raw, multi-source records into canonical entities. It handles two paths: <strong>deterministic</strong> (structured sources with stable PKs/FKs, resolved via Context Forge’s FK graph + source-record-ID equality) and <strong>probabilistic</strong> (heterogeneous/unstructured sources with no shared ID, resolved via the six-stage pipeline below).</p>
+<h3 id="the-six-stage-resolver-engine">The Six-Stage Resolver Engine</h3>
+<pre><code>   ┌──────────── Stage A — Blocking ────────────────────────────────┐
+   │  HNSW vector ANN + DeepBlocker learned blocking + MinHash LSH  │
+   │  → reduces O(N²) candidate space to O(N log N)                 │
+   └────────────────────────────────────────────────────────────────┘
+                                  ▼
+   ┌──────────── Stage B — Probabilistic Record Linkage ────────────┐
+   │  Fellegi-Sunter: m/u probabilities per attribute, EM-learned   │
+   │  Calibrated thresholds via Platt scaling / isotonic regression  │
+   └────────────────────────────────────────────────────────────────┘
+                                  ▼
+   ┌──────────── Stage C — Neural Pairwise Matching ────────────────┐
+   │  Cross-encoder (DITTO-style): RoBERTa/DeBERTa-v3, ~110M params │
+   │  Fine-tuned per entity-type · ~5K pairs/sec on GPU              │
+   └────────────────────────────────────────────────────────────────┘
+                                  ▼
+   ┌──────────── Stage D — Coreference (Unstructured Text) ─────────┐
+   │  NER (GLiNER zero-shot / RoBERTa fine-tuned) + within-doc      │
+   │  coref + cross-document coref + mention-to-canonical linking    │
+   └────────────────────────────────────────────────────────────────┘
+                                  ▼
+   ┌──────────── Stage E — Identity Graph Stitching ────────────────┐
+   │  PSL transitive closure · Conflict detection · Soft-link mode  │
+   │  Bitemporal annotations on every edge                           │
+   └────────────────────────────────────────────────────────────────┘
+                                  ▼
+   ┌──────────── Stage F — Active Learning + LLM Adjudication ──────┐
+   │  Residual 5-10% hard cases · Uncertainty sampling               │
+   │  Human label via Resolver Studio · LLM few-shot final           │
+   └────────────────────────────────────────────────────────────────┘</code></pre>
+<p><strong>What is explicitly avoided:</strong> String-distance heuristics (Levenshtein, Jaro-Winkler) as primary signals — famously brittle on real enterprise data. Graph-only ER without coreference — ~30% of enterprise entity references live in free text. One-shot LLM extraction — too expensive at scale, inconsistent without fine-tuning.</p>
+<h3 id="the-identity-graph">The Identity Graph</h3>
+<p>The persistent artifact. Every canonical entity carries source identifiers, reconciled attributes, and a complete audit trail:</p>
+<pre><code>canonical_id (UUID)
+├── identifiers[] = [
+│     { source: &quot;salesforce&quot;, source_id: &quot;...&quot;, confidence: 1.00, evidence: &quot;deterministic_pk&quot; },
+│     { source: &quot;gmail&quot;,      source_id: &quot;...&quot;, confidence: 0.99, evidence: &quot;email_exact+domain&quot; },
+│     { source: &quot;slack&quot;,      source_id: &quot;...&quot;, confidence: 0.94, evidence: &quot;cross_encoder+name&quot; },
+│   ]
+├── attribute_consensus = {
+│     &quot;name&quot;: &quot;Alice Chen&quot; (salesforce, 1.00),
+│     &quot;title_current&quot;: &quot;VP of Engineering&quot; (confluence, 0.97, valid_at: 2025-06-15)
+│   }
+└── audit_trail = [ ... resolution events ordered by created_at ... ]</code></pre>
+<p>The graph is fully bitemporal: every identifier link carries <code>valid_at / invalid_at</code> and <code>created_at / expired_at</code>.</p>
+<h3 id="resolver-studio-profiles">Resolver Studio &amp; Profiles</h3>
+<p>Three review queues: <strong>Active-learning queue</strong> (pairs flagged via uncertainty sampling, side-by-side with cross-encoder confidence and Fellegi-Sunter breakdown), <strong>Conflict queue</strong> (PSL constraint violations), <strong>Identity-graph explorer</strong> (navigate canonical entities, drill into edges, view bitemporal history).</p>
+<p>Pre-tuned Resolver Profiles per entity type: <code>person-crm</code>, <code>person-engineering</code>, <code>organization-account</code>, <code>deal-opportunity</code>, <code>device-asset</code>, <code>product-sku</code>.</p>
+<p>Data enters through the pipeline, structured sources are mapped by Context Forge, identities are stitched by Context Resolver. The next question: how does data come <em>out</em> when an agent needs context?</p>
+<h2 id="retrieval-context-assembly">10. Retrieval &amp; Context Assembly</h2>
+<h3 id="hybrid-retrieval">Hybrid Retrieval</h3>
+<p>Three search methods run in parallel, then merge through a reranker:</p>
+<table>
+<colgroup>
+<col style="width: 33%" />
+<col style="width: 33%" />
+<col style="width: 33%" />
+</colgroup>
+<thead>
+<tr>
+<th>Method</th>
+<th>Strong at</th>
+<th>Misses</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>BM25</strong> (Lucene)</td>
+<td>Exact terms, names, IDs, jargon</td>
+<td>Paraphrases, synonyms</td>
+</tr>
+<tr>
+<td><strong>Cosine</strong> (HNSW)</td>
+<td>Semantic meaning, paraphrases</td>
+<td>Exact names, IDs</td>
+</tr>
+<tr>
+<td><strong>BFS</strong> (graph traversal)</td>
+<td>Structural relationships</td>
+<td>Disconnected entities</td>
+</tr>
+</tbody>
+</table>
+<p>Five reranking strategies: <strong>RRF</strong> (default, rank-based, k=60), <strong>MMR</strong> (diversity, λ=0.7), <strong>Cross-Encoder</strong> (neural accuracy), <strong>Node Distance</strong> (graph proximity), <strong>Episode Mentions</strong> (recency). 3 methods × 5 rerankers = 15 composable strategies.</p>
+<p>Why RRF as default: BM25 scores (0-20), cosine (0-1), and BFS (0-1) live on incompatible scales. RRF uses rank positions — scale-independent.</p>
+<h3 id="the-7-step-context-assembly-algorithm">The 7-Step Context Assembly Algorithm</h3>
+<ol type="1">
+<li><strong>Parse Intent</strong> — decompose query into entity references, relationship hints, temporal constraints</li>
+<li><strong>Seed Entity Selection</strong> — BM25 + cosine identify BFS starting points</li>
+<li><strong>Hybrid Parallel Search</strong> — BM25 + cosine + BFS via <code>asyncio.gather</code></li>
+<li><strong>Rerank &amp; Merge</strong> — deduplicate by UUID, apply configured reranker</li>
+<li><strong>Apply Feedback Weights</strong> — <code>final_score = reranker_score × feedback_weight</code></li>
+<li><strong>Budget-Aware Temporal Pruning</strong> — fill <code>max_tokens</code> in priority order: primary entities → direct relationships → current facts → saga summaries → decision lineage</li>
+<li><strong>Serialize &amp; Package</strong> — structured JSON with tokens used, entities traversed, confidence, latency</li>
+</ol>
+<p><strong>Target: Token Reduction.</strong> Chunk-based RAG retrieves ~3,400 tokens of overlapping, redundant text. ContextD retrieves ~800 structured tokens — entities appear once (deduplication), superseded facts are dropped (temporal pruning), low-weight elements are excluded (feedback pruning). The reduction is only achievable because bitemporal storage, feedback weights, and context assembly work together.</p>
+<p>Step 5 — feedback weights — is what makes the graph learn. The next section explains how.</p>
+<h2 id="feedback-ontology-context-cores">11. Feedback, Ontology &amp; Context Cores</h2>
+<h3 id="the-feedback-system-streaming-ema">The Feedback System — Streaming EMA</h3>
+<p>Each agent rating (1-5) is normalized to [0.0, 1.0] and fed into an exponential moving average:</p>
+<pre><code>updated_weight = previous_weight + α × (normalized_rating − previous_weight)</code></pre>
+<p><strong>α = 0.1</strong>: small enough to resist single-rating swings, large enough to converge within ~30 interactions. After 30 positive rounds, an entity’s weight rises from 0.50 → ~0.92. Its retrieval score jumps from <code>0.90 × 0.50 = 0.45</code> to <code>0.90 × 0.92 = 0.83</code>.</p>
+<p>Design properties: cold-start safe (all weights start at 0.5), idempotent (duplicates skipped), session-aware, auditable (all events logged). The graph literally gets smarter with use.</p>
+<h3 id="the-ontology-engine">The Ontology Engine</h3>
+<p>Optional. Constrains what the LLM can extract, improving consistency and reducing hallucinated types. OWL-like JSON schema with classes (subclass/disjoint), object properties (domain/range), and datatype properties (cardinality).</p>
+<p><strong>Four-step semantic routing</strong> (TrustGraph-inspired): <strong>Embed</strong> every class and property → <strong>Select</strong> relevant subset via vector match (threshold 0.3, top-k 10) + dependency resolution → <strong>Inject</strong> into LLM extraction prompt via Jinja2 → <strong>Validate</strong> output against rules (class filtering, domain/range enforcement, cardinality checks, disjoint-class enforcement).</p>
+<p>The ontology is not a passive schema — it actively participates in extraction at pipeline Steps 3 and 6. Pre-built ontologies ship for CRM, Support, Engineering, and Marketing.</p>
+<h3 id="context-cores-versioned-graph-snapshots">Context Cores — Versioned Graph Snapshots</h3>
+<p>Versioned, portable, content-addressed snapshots of the entire graph state.</p>
+<p><strong>Lifecycle:</strong> BUILD → TEST → VERSION → PROMOTE → PRODUCTION (with instant ROLLBACK).</p>
+<p><strong>Contents:</strong> graph data, embeddings, ontology, source manifests, retrieval policies, feedback weights, metadata (SHA-256 content hash, build timestamp). Serialized via msgpack; each core is immutable once built. Think of them as Docker images for knowledge graphs.</p>
+<p>These three systems — feedback, ontology, and Context Cores — complete the picture of how ContextD operates. The question now is: does it perform?</p>
+<hr />
+<h1 id="part-iv-validation-capabilities" class="part-title">Part IV — Validation &amp; Capabilities</h1>
+<h2 id="benchmarks-and-validation">12. Benchmarks and Validation</h2>
+<p>This section captures measured performance from controlled benchmarks on existing database candidates — ArcadeDB (Apache 2.0, multi-model) and FalkorDB (SSPL, in-memory graph) — run on identical infrastructure and comparable datasets, alongside published benchmarks for Neo4j, Qdrant, Pinecone, Weaviate, and others. The results explain why no existing database meets ContextD’s requirements and why a purpose-built system is necessary.</p>
+<h3 id="test-environment">12.1 Test Environment</h3>
+<table>
+<colgroup>
+<col style="width: 44%" />
+<col style="width: 56%" />
+</colgroup>
+<thead>
+<tr>
+<th>Component</th>
+<th>Specification</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>DB Host</td>
+<td>Azure Standard_D16s_v5 — 16 vCPU, 64 GB RAM, 240 GB Premium SSD</td>
+</tr>
+<tr>
+<td>Client Host</td>
+<td>Azure Standard_D4s_v5 — 4 vCPU, 16 GB RAM</td>
+</tr>
+<tr>
+<td>Network</td>
+<td>Same VNet, private IPs, ~0.73ms HTTP RTT</td>
+</tr>
+<tr>
+<td>ArcadeDB</td>
+<td>v26.4.2, JVM heap 48 GB, G1GC, production mode, HTTP/JSON API</td>
+</tr>
+<tr>
+<td>FalkorDB</td>
+<td>Latest, Podman, –maxmemory 48 GB, host networking, Redis protocol</td>
+</tr>
+</tbody>
+</table>
+<table>
+<thead>
+<tr>
+<th>Dataset Metric</th>
+<th>ArcadeDB</th>
+<th>FalkorDB</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Vertices (Entity)</td>
+<td>475,191</td>
+<td>344,554</td>
+</tr>
+<tr>
+<td>Edges (Relation)</td>
+<td>1,373,872</td>
+<td>772,632</td>
+</tr>
+<tr>
+<td>Avg edges/vertex</td>
+<td>2.89</td>
+<td>2.24</td>
+</tr>
+<tr>
+<td>Embedding dims</td>
+<td>1,024 (Cohere embed-english-v3.0, float32)</td>
+<td>Same</td>
+</tr>
+</tbody>
+</table>
+<p>Both datasets derived from DBpedia 2022-12 entity graphs joined with Cohere Wikipedia embeddings.</p>
+<h3 id="head-to-head-arcadedb-vs-falkordb">12.2 Head-to-Head: ArcadeDB vs FalkorDB</h3>
+<h4 id="peak-throughput-opssec">Peak Throughput (ops/sec)</h4>
+<table style="width:100%;">
+<colgroup>
+<col style="width: 16%" />
+<col style="width: 22%" />
+<col style="width: 22%" />
+<col style="width: 22%" />
+<col style="width: 16%" />
+</colgroup>
+<thead>
+<tr>
+<th>Query Type</th>
+<th style="text-align: right;">ArcadeDB</th>
+<th style="text-align: right;">FalkorDB</th>
+<th style="text-align: right;">FalkorDB Advantage</th>
+<th>Notes</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Point Lookup</td>
+<td style="text-align: right;">1,456 @ 16T</td>
+<td style="text-align: right;">6,034 @ 16T</td>
+<td style="text-align: right;"><strong>4.1×</strong></td>
+<td>Redis in-memory hash tables vs LSM B-tree</td>
+</tr>
+<tr>
+<td>Full-Text (BM25)</td>
+<td style="text-align: right;">1,480 @ 32T</td>
+<td style="text-align: right;">4,703 @ 64T</td>
+<td style="text-align: right;"><strong>3.2×</strong></td>
+<td>Both use Lucene; FalkorDB avoids disk I/O</td>
+</tr>
+<tr>
+<td>Graph 1-hop</td>
+<td style="text-align: right;">596 @ 8T</td>
+<td style="text-align: right;">5,571 @ 32T</td>
+<td style="text-align: right;"><strong>9.3×</strong></td>
+<td>Sparse matrix vs adjacency list locks</td>
+</tr>
+<tr>
+<td>Vector Search</td>
+<td style="text-align: right;">157 @ 8T</td>
+<td style="text-align: right;">979 @ 16T</td>
+<td style="text-align: right;"><strong>6.2×</strong></td>
+<td>Both HNSW; FalkorDB benefits from zero page cache misses</td>
+</tr>
+<tr>
+<td><strong>Full Hybrid</strong></td>
+<td style="text-align: right;"><strong>137 @ 32T</strong></td>
+<td style="text-align: right;"><strong>828 @ 16T</strong></td>
+<td style="text-align: right;"><strong>6.0×</strong></td>
+<td>The actual AI context workload</td>
+</tr>
+</tbody>
+</table>
+<h4 id="single-thread-latency-p50-ms-lower-is-better">Single-Thread Latency p50 (ms, lower is better)</h4>
+<table>
+<thead>
+<tr>
+<th>Query Type</th>
+<th style="text-align: right;">ArcadeDB</th>
+<th style="text-align: right;">FalkorDB</th>
+<th style="text-align: right;">FalkorDB Advantage</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Point Lookup</td>
+<td style="text-align: right;">0.77</td>
+<td style="text-align: right;">0.33</td>
+<td style="text-align: right;"><strong>2.3×</strong></td>
+</tr>
+<tr>
+<td>Full-Text (BM25)</td>
+<td style="text-align: right;">3.96</td>
+<td style="text-align: right;">0.40</td>
+<td style="text-align: right;"><strong>9.9×</strong></td>
+</tr>
+<tr>
+<td>Graph 1-hop</td>
+<td style="text-align: right;">1.90</td>
+<td style="text-align: right;">0.39</td>
+<td style="text-align: right;"><strong>4.9×</strong></td>
+</tr>
+<tr>
+<td>Vector Search</td>
+<td style="text-align: right;">42.3</td>
+<td style="text-align: right;">1.72</td>
+<td style="text-align: right;"><strong>24.6×</strong></td>
+</tr>
+<tr>
+<td><strong>Full Hybrid</strong></td>
+<td style="text-align: right;"><strong>47.3</strong></td>
+<td style="text-align: right;"><strong>2.09</strong></td>
+<td style="text-align: right;"><strong>22.6×</strong></td>
+</tr>
+</tbody>
+</table>
+<h4 id="latency-under-load-p50-ms">Latency Under Load (p50 ms)</h4>
+<table>
+<colgroup>
+<col style="width: 15%" />
+<col style="width: 21%" />
+<col style="width: 21%" />
+<col style="width: 21%" />
+<col style="width: 21%" />
+</colgroup>
+<thead>
+<tr>
+<th>Query Type</th>
+<th style="text-align: right;">ArcadeDB 1T</th>
+<th style="text-align: right;">ArcadeDB 128T</th>
+<th style="text-align: right;">FalkorDB 1T</th>
+<th style="text-align: right;">FalkorDB 128T</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Point Lookup</td>
+<td style="text-align: right;">0.77</td>
+<td style="text-align: right;">82.1</td>
+<td style="text-align: right;">0.33</td>
+<td style="text-align: right;">29.0</td>
+</tr>
+<tr>
+<td>Graph 1-hop</td>
+<td style="text-align: right;">1.90</td>
+<td style="text-align: right;">228.3</td>
+<td style="text-align: right;">0.39</td>
+<td style="text-align: right;">19.2</td>
+</tr>
+<tr>
+<td>Vector Search</td>
+<td style="text-align: right;">42.3</td>
+<td style="text-align: right;">871.1</td>
+<td style="text-align: right;">1.72</td>
+<td style="text-align: right;">133.3</td>
+</tr>
+<tr>
+<td><strong>Hybrid</strong></td>
+<td style="text-align: right;"><strong>47.3</strong></td>
+<td style="text-align: right;"><strong>975.6</strong></td>
+<td style="text-align: right;"><strong>2.09</strong></td>
+<td style="text-align: right;"><strong>163.6</strong></td>
+</tr>
+</tbody>
+</table>
+<h4 id="ingestion-performance">Ingestion Performance</h4>
+<table>
+<thead>
+<tr>
+<th>Phase</th>
+<th>ArcadeDB</th>
+<th>FalkorDB</th>
+<th>Winner</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Vertex ingestion (345K)</td>
+<td>~260s</td>
+<td>~130s</td>
+<td>FalkorDB 2×</td>
+</tr>
+<tr>
+<td>Edge ingestion (773K)</td>
+<td>~320s</td>
+<td>~2s</td>
+<td><strong>FalkorDB 160×</strong></td>
+</tr>
+<tr>
+<td>Vector index build</td>
+<td><strong>150s</strong></td>
+<td>~1,200s (~20 min)</td>
+<td><strong>ArcadeDB 8×</strong></td>
+</tr>
+<tr>
+<td>Full-text index build</td>
+<td>~600s</td>
+<td>5.8s</td>
+<td><strong>FalkorDB 103×</strong></td>
+</tr>
+</tbody>
+</table>
+<p>Critical difference: during FalkorDB’s 20-minute vector index build, <strong>vector queries are blocked</strong> (<code>UNDER CONSTRUCTION</code>). ArcadeDB allows concurrent queries during index construction.</p>
+<h3 id="industry-context">12.3 Industry Context</h3>
+<h4 id="graph-traversal-1-hop">Graph Traversal (1-hop)</h4>
+<table>
+<colgroup>
+<col style="width: 19%" />
+<col style="width: 26%" />
+<col style="width: 21%" />
+<col style="width: 31%" />
+</colgroup>
+<thead>
+<tr>
+<th>System</th>
+<th>p50 Latency</th>
+<th>Peak QPS</th>
+<th>Architecture</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>FalkorDB</td>
+<td>0.39ms</td>
+<td>5,571 @ 32T</td>
+<td>In-memory Redis module, sparse matrix</td>
+</tr>
+<tr>
+<td>Memgraph</td>
+<td>~1.1ms</td>
+<td>32,028</td>
+<td>In-memory C++, no JVM</td>
+</tr>
+<tr>
+<td>ArcadeDB</td>
+<td>1.90ms</td>
+<td>596 @ 8T</td>
+<td>Disk + page cache, multi-model ACID</td>
+</tr>
+<tr>
+<td>Neo4j</td>
+<td>~28ms</td>
+<td>1,010 @ 16T</td>
+<td>JVM, index-free adjacency, SSPL</td>
+</tr>
+</tbody>
+</table>
+<p>ArcadeDB at 1.90ms is 15× faster than Neo4j and competitive with in-memory engines, despite running on disk-backed multi-model storage.</p>
+<h4 id="vector-search-hnsw-ann">Vector Search (HNSW ANN)</h4>
+<table>
+<thead>
+<tr>
+<th>System</th>
+<th>p50 Latency</th>
+<th>Scale</th>
+<th>Notes</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Qdrant</td>
+<td>~1ms</td>
+<td>1M (SIFT-1M)</td>
+<td>Dedicated vector DB, Rust</td>
+</tr>
+<tr>
+<td>FalkorDB</td>
+<td>1.72ms</td>
+<td>345K</td>
+<td>In-memory HNSW</td>
+</tr>
+<tr>
+<td>Pinecone (serverless)</td>
+<td>16ms</td>
+<td>10M</td>
+<td>Managed</td>
+</tr>
+<tr>
+<td>ArcadeDB</td>
+<td>42.3ms</td>
+<td>475K</td>
+<td>Native to multi-model engine</td>
+</tr>
+<tr>
+<td>Pinecone (DRN, production)</td>
+<td>45ms</td>
+<td>135M</td>
+<td>600 QPS sustained</td>
+</tr>
+</tbody>
+</table>
+<h4 id="full-hybrid-retrieval-bm25-vector-graph">Full Hybrid Retrieval (BM25 + Vector + Graph)</h4>
+<p>The query pattern AI agents actually need — and the one nobody else benchmarks as a single operation.</p>
+<table>
+<colgroup>
+<col style="width: 23%" />
+<col style="width: 32%" />
+<col style="width: 44%" />
+</colgroup>
+<thead>
+<tr>
+<th>System</th>
+<th>Hybrid p50</th>
+<th>What It Takes</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>FalkorDB</td>
+<td>2.09ms</td>
+<td>1 process, in-memory, SSPL, 3 data models</td>
+</tr>
+<tr>
+<td>ArcadeDB</td>
+<td>47.3ms</td>
+<td>1 process, disk-backed, Apache 2.0, 6 data models, ACID</td>
+</tr>
+<tr>
+<td>Neo4j + Pinecone + ES</td>
+<td>~120-200ms (est.)</td>
+<td>3 processes, 3 network hops, no cross-DB ACID</td>
+</tr>
+<tr>
+<td>Weaviate (hybrid)</td>
+<td>~15-30ms</td>
+<td>BM25 + vector only — <strong>no graph traversal</strong></td>
+</tr>
+</tbody>
+</table>
+<h3 id="bottleneck-analysis">12.4 Bottleneck Analysis</h3>
+<p><strong>#1 — Point Lookup ceiling (~1,450 ops/sec on ArcadeDB).</strong> Sub-ms queries but throughput barely scales past 4T. FalkorDB hits 6,034 on the same hardware — the gap is in-memory hash tables vs disk-backed B-tree + HTTP overhead. <em>Mitigation:</em> in-process cache (Caffeine/LRU), Redis tier, read replicas.</p>
+<p><strong>#2 — Graph traversal lock contention (~595 ops/sec @ 8T on ArcadeDB).</strong> Most concerning. Saturates at 4 threads due to adjacency-list page-level locks. FalkorDB’s sparse matrix avoids this entirely (5,571 ops/sec at 32T). <em>Mitigation:</em> CSR-based Graph Analytical View for lock-free reads, hot subgraph caching.</p>
+<p><strong>#3 — Vector search CPU-bound (157 ops/sec @ 8T on ArcadeDB).</strong> HNSW random memory access + internal locks. FalkorDB achieves 979 ops/sec — 6.2× faster. Latency degrades 20× from 8T to 128T on ArcadeDB while throughput stays flat. At 6M vectors, single-query latency grows to ~100-200ms. <em>Mitigation:</em> read replicas, per-shard horizontal scaling, PQ + pre-filtering.</p>
+<p><strong>#4 — Hybrid ceiling (137 on ArcadeDB, 828 on FalkorDB).</strong> Dominated by vector search on both engines (89% of ArcadeDB’s hybrid latency, 82% of FalkorDB’s). All vector mitigations apply directly.</p>
+<h3 id="evaluation-why-no-existing-database-is-sufficient">12.5 Evaluation: Why No Existing Database Is Sufficient</h3>
+<p>FalkorDB’s 6× throughput advantage raises an obvious question. The answer: both candidates fail ContextD’s requirements, in different ways.</p>
+<table>
+<colgroup>
+<col style="width: 16%" />
+<col style="width: 20%" />
+<col style="width: 20%" />
+<col style="width: 44%" />
+</colgroup>
+<thead>
+<tr>
+<th>Factor</th>
+<th>ArcadeDB</th>
+<th>FalkorDB</th>
+<th>ContextD Requirement</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>License</strong></td>
+<td>Apache 2.0 — permissive</td>
+<td>SSPL — restricts commercial use</td>
+<td>Permissive, embeddable</td>
+</tr>
+<tr>
+<td><strong>Storage</strong></td>
+<td>Disk-backed — scales beyond RAM</td>
+<td>In-memory only — 6M entities ≈ 140 GB</td>
+<td>Must scale beyond RAM</td>
+</tr>
+<tr>
+<td><strong>Data models</strong></td>
+<td>6 (graph + document + KV + vector + full-text + time-series)</td>
+<td>3 (graph + vector + full-text)</td>
+<td>6+ for cross-model ACID</td>
+</tr>
+<tr>
+<td><strong>Query during ingestion</strong></td>
+<td>Yes — concurrent during index build</td>
+<td>No — blocked during ~20 min HNSW build</td>
+<td>Required for production</td>
+</tr>
+<tr>
+<td><strong>Wire protocols</strong></td>
+<td>6 (Bolt, PostgreSQL, MongoDB, Redis, gRPC, HTTP)</td>
+<td>1 (Redis)</td>
+<td>Multi-protocol for ecosystem fit</td>
+</tr>
+<tr>
+<td><strong>Embeddable</strong></td>
+<td>Yes (Java, via jpype for Python)</td>
+<td>No (server only)</td>
+<td>Required for embedded mode</td>
+</tr>
+<tr>
+<td><strong>Bitemporal</strong></td>
+<td>No native support</td>
+<td>No native support</td>
+<td>Required — insert-not-update with 4 temporal columns</td>
+</tr>
+<tr>
+<td><strong>Feedback weights</strong></td>
+<td>No inline per-record weight</td>
+<td>No inline per-record weight</td>
+<td>Required — multiplied at query time</td>
+</tr>
+<tr>
+<td><strong>Decision lineage</strong></td>
+<td>No typed vertices/edges</td>
+<td>No typed vertices/edges</td>
+<td>Required — first-class entities with strict schema</td>
+</tr>
+<tr>
+<td><strong>Context assembly</strong></td>
+<td>No native query planner</td>
+<td>No native query planner</td>
+<td>Required — hybrid BM25+vector+graph in one transaction</td>
+</tr>
+</tbody>
+</table>
+<p>ArcadeDB has the right architecture (multi-model ACID, disk-backed, Apache 2.0) but lacks bitemporal time, feedback weights, decision lineage, and context assembly — the intelligence layer that makes ContextD a context database rather than a generic multi-model engine. FalkorDB has the speed but lacks three data models, blocks queries during ingestion, and its SSPL license prohibits commercial embedding. Neither treats context as a first-class data model.</p>
+<h3 id="architectural-commitments-from-evaluation">12.6 Architectural Commitments from Evaluation</h3>
+<p>The benchmarks exposed four performance requirements that any context database must address:</p>
+<ol type="1">
+<li><strong>Separate ingestion and query paths</strong> — HNSW indexing takes 150s for 475K vectors (1,200s on FalkorDB); mixing creates contention on both engines.</li>
+<li><strong>Independent horizontal scalability for vector search</strong> — vector search is the bottleneck on both engines (89% of hybrid latency on ArcadeDB, 82% on FalkorDB). Per-shard throughput must be independently scalable.</li>
+<li><strong>Hot-path cache layer</strong> — the system of record needs a hot read cache for frequently-accessed entities, addressing the ~1,450 ops/sec point lookup ceiling.</li>
+<li><strong>CSR-based analytical view</strong> — graph traversal saturates at 4 threads on ArcadeDB due to page-level locks. CSR supports lock-free parallel reads — the path to closing the 9.3× gap with FalkorDB.</li>
+</ol>
+<h3 id="why-a-new-database-is-needed">12.7 Why a New Database Is Needed</h3>
+<p>The benchmarks confirm that no existing database — not ArcadeDB, not FalkorDB, not any combination of specialized databases — natively supports what AI context assembly requires. Three structural deficiencies make this clear.</p>
+<p><strong>No existing database treats context as a first-class data model.</strong> The best multi-model engines provide graph, vector, full-text, document, KV, and time-series under one ACID transaction — but they have no concept of episodes, sagas, decisions, feedback weights, or context cores. These are not features you configure; they are primitives that shape schema, indexing, and query execution. Bitemporal supersession (insert-not-update with four temporal columns), feedback-weighted retrieval (inline per-record weights multiplied at query time), and decision lineage (typed vertices with strict edge classes) require storage-layer integration that no general-purpose database provides. ContextD is purpose-built to add these as first-class citizens.</p>
+<p><strong>Performance and architecture are in tension — and only a purpose-built system resolves both.</strong> FalkorDB delivers 22× lower hybrid latency than ArcadeDB. But it requires all data in RAM (6M entities ≈ 140 GB), blocks queries during vector index builds, offers only 3 data models, and carries SSPL licensing that prohibits commercial embedding. ArcadeDB provides the right architectural ingredients (disk-backed, Apache 2.0, 6 data models, 6 wire protocols) but its graph traversal saturates at 4 threads and its vector search peaks at 157 ops/sec. The database ContextD needs requires multi-model ACID <em>plus</em> bitemporal time, feedback weights, and context assembly — and that database does not exist today.</p>
+<p><strong>The “stitch three databases together” approach fails at the system level.</strong> The industry default — Neo4j for graphs, Pinecone for vectors, Elasticsearch for full-text — produces estimated hybrid latency of 120-200ms, requires 3 separate processes with no cross-model ACID, and makes bitemporal queries, feedback-weighted retrieval, and decision lineage architecturally impossible. You cannot implement supersession across three databases that don’t share a transaction log. You cannot apply feedback weights at query time when the weights live in a different process than the vectors. You cannot walk a decision lineage chain when the decisions, facts, and policies are spread across three stores with no referential integrity between them. The multi-DB assembly isn’t just slower — it is structurally incapable of supporting the features that make context assembly work.</p>
+<h2 id="distinguishing-capabilities">13. Distinguishing Capabilities</h2>
+<p>Fourteen structural commitments baked into schema, storage, and engine internals. Each includes why retrofitting fails — why competitors cannot add these after the fact.</p>
+<p><strong>13.1 Database-native multi-model storage</strong>. Single ACID engine holds graph, vector (HNSW+PQ), full-text (BM25), document, KV, time-series. Every transaction atomic across all six.</p>
+<p><em>Retrofitting fails:</em> cross-process plugins cannot deliver cross-model ACID; native performance requires substrate-level commitment.</p>
+<p><strong>13.2 Bitemporal at schema level</strong>. Every row carries four timestamp columns; supersession is insert-not-update with OCC.</p>
+<p><em>Retrofitting fails:</em> historical event-time and transaction-time information cannot be back-filled.</p>
+<p><strong>13.3 Feedback-weighted retrieval at the data layer</strong>. Every node/edge carries inline <code>feedback_weight</code> (4 bytes); retrieval multiplies reranker scores at zero I/O cost.</p>
+<p><em>Retrofitting fails:</em> adding per-record float to a DB that didn’t reserve the slot means full table rewrite.</p>
+<p><strong>13.4 Decision lineage as first-class data</strong>. Typed vertices with strict schema, four typed edge classes, bitemporal columns.</p>
+<p><em>Retrofitting fails:</em> free-form node types don’t enforce invariants; document stores lack typed edges.</p>
+<p><strong>13.5 Versioned content-addressed snapshots</strong>. Context Core = immutable msgpack archive identified by SHA-256, containing entire graph state.</p>
+<p><em>Retrofitting fails:</em> versioning means versioning topology + embeddings + indexes + feedback weights simultaneously.</p>
+<p><strong>13.6 Schema-aware pre-pipeline mapping</strong>. Context Forge owns ingestion, schema, and curation UX. 60-80% LLM cost reduction.</p>
+<p><em>Retrofitting fails:</em> no single alternative owns all three.</p>
+<p><strong>13.7 Cross-source identity stitching</strong>. Six-stage pipeline, bitemporal Identity Graph, Resolver Studio, per-entity-type profiles.</p>
+<p><em>Retrofitting fails:</em> requires simultaneous ownership of ingestion, vectors, neural matching, coreference/NER, PSL, bitemporal storage, and active-learning UX.</p>
+<p><strong>13.8 Provenance on every element</strong>. Dictionary-encoded source pipeline, task, extraction method, episode ID (~16 bytes per record).</p>
+<p><strong>13.9 Hybrid retrieval composability</strong>. Three methods, five rerankers, one transaction context.</p>
+<p><em>Retrofitting fails:</em> cross-process search adds latency and breaks consistency.</p>
+<p><strong>13.10 Wire-protocol polyglot</strong>. Single instance speaks Bolt, PostgreSQL, MongoDB, Redis, gRPC, HTTP simultaneously.</p>
+<p><strong>13.11 Replicated state with log-typed entries</strong>. Raft consensus with five state-machine entry types; page-version guards for idempotent replay.</p>
+<p><strong>13.12 Permissive-license substrate</strong>. Apache 2.0 storage; open-core intelligence layer.</p>
+<p><strong>13.13 Composability</strong>. All capabilities ship simultaneously. They feed each other: bitemporal makes the Identity Graph audit-grade, feedback makes retrieval self-improving, decision lineage requires bitemporal + provenance, Context Cores require multi-model ACID. <strong>Switching costs compound</strong> — the Identity Graph, bitemporal history, feedback weights, Forge Mappings, Context Cores, and audit log are all lost at once.</p>
+<p><strong>13.14 Token reduction</strong>. Structured context vs chunk-based RAG. Only achievable via entity deduplication, temporal filtering, and feedback-weighted pruning — all requiring the bitemporal graph + feedback + context assembly to work together.</p>
+<hr />
+<h1 id="part-v-integration-operations" class="part-title">Part V — Integration &amp; Operations</h1>
+<h2 id="integration-paths">14. Integration Paths</h2>
+<h3 id="python-sdk">Python SDK</h3>
+<pre class="python"><code>from contextd import ContextD
+
+db = ContextD(path=&quot;./my_graph&quot;)  # embedded — or url/api_key for cloud
+result = await db.ingest_episode(name=&quot;Update&quot;, content=&quot;...&quot;, source=&quot;slack&quot;)
+result = db.query(&quot;Who are the decision makers?&quot;)
+result = db.query(&quot;What did we know on March 15th?&quot;, as_of=&quot;2026-03-15&quot;)
+context = db.get_context(query=&quot;Draft a follow-up&quot;, max_tokens=2000)
+await db.feedback(session_id=&quot;s1&quot;, query_id=&quot;q1&quot;, score=4)
+core = db.core.build(name=&quot;acme-context&quot;, graph=&quot;production&quot;)</code></pre>
+<h3 id="mcp-server-two-layer">MCP Server (Two-Layer)</h3>
+<p>Layer 1 (substrate-native): <code>execute_command</code>, <code>get_schema</code>, <code>query</code>, <code>server_status</code>. Layer 2 (ContextD engine): <code>query_context</code>, <code>get_entity</code>, <code>get_timeline</code>, <code>get_decision_lineage</code>, <code>submit_feedback</code>, <code>ingest_episode</code>. Transports: stdio (Claude Code, Cursor, Windsurf), SSE, HTTP.</p>
+<h3 id="rest-api">REST API</h3>
+<pre class="http"><code>POST /query, /cypher, /search, /context, /ingest/episode, /feedback, /cores/build
+GET  /entities/:id, /entities/:id/relationships, /entities/:id/timeline
+GET  /decisions/:id/lineage, /sagas/:id/summary
+POST /cores/:id/promote, /cores/:id/rollback</code></pre>
+<h2 id="deployment-security-rbac">15. Deployment, Security &amp; RBAC</h2>
+<h3 id="deployment">Deployment</h3>
+<table>
+<thead>
+<tr>
+<th>Mode</th>
+<th>Latency</th>
+<th>How to Start</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Embedded</td>
+<td>&lt;10ms</td>
+<td><code>pip install contextd</code> (Java 21+ via jpype)</td>
+</tr>
+<tr>
+<td>Server</td>
+<td>&lt;50ms</td>
+<td><code>docker compose up</code></td>
+</tr>
+<tr>
+<td>Cloud</td>
+<td>&lt;300ms</td>
+<td>contextd.ai</td>
+</tr>
+<tr>
+<td>Enterprise</td>
+<td>&lt;50ms</td>
+<td>On-prem K8s with HA clustering</td>
+</tr>
+</tbody>
+</table>
+<p>HA via ArcadeDB Leader-Replica with synchronous replication and automatic leader election.</p>
+<h3 id="rbac">RBAC</h3>
+<p>Six roles with scoping across three dimensions (sources, entity types, tags):</p>
+<table>
+<thead>
+<tr>
+<th>Permission</th>
+<th style="text-align: center;">Owner</th>
+<th style="text-align: center;">Admin</th>
+<th style="text-align: center;">Editor</th>
+<th style="text-align: center;">Viewer</th>
+<th style="text-align: center;">Agent</th>
+<th style="text-align: center;">Connector</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Read entities/relationships/facts</td>
+<td style="text-align: center;">Y</td>
+<td style="text-align: center;">Y</td>
+<td style="text-align: center;">Y</td>
+<td style="text-align: center;">scoped</td>
+<td style="text-align: center;">scoped</td>
+<td style="text-align: center;">N</td>
+</tr>
+<tr>
+<td>Read decision lineage</td>
+<td style="text-align: center;">Y</td>
+<td style="text-align: center;">Y</td>
+<td style="text-align: center;">Y</td>
+<td style="text-align: center;">scoped</td>
+<td style="text-align: center;">scoped</td>
+<td style="text-align: center;">N</td>
+</tr>
+<tr>
+<td>Read raw episodes</td>
+<td style="text-align: center;">Y</td>
+<td style="text-align: center;">Y</td>
+<td style="text-align: center;">Y</td>
+<td style="text-align: center;">N</td>
+<td style="text-align: center;">N</td>
+<td style="text-align: center;">N</td>
+</tr>
+<tr>
+<td>Write entities/facts</td>
+<td style="text-align: center;">Y</td>
+<td style="text-align: center;">Y</td>
+<td style="text-align: center;">Y</td>
+<td style="text-align: center;">N</td>
+<td style="text-align: center;">N</td>
+<td style="text-align: center;">own source</td>
+</tr>
+<tr>
+<td>Submit feedback</td>
+<td style="text-align: center;">Y</td>
+<td style="text-align: center;">Y</td>
+<td style="text-align: center;">Y</td>
+<td style="text-align: center;">N</td>
+<td style="text-align: center;">Y</td>
+<td style="text-align: center;">N</td>
+</tr>
+<tr>
+<td>Manage connectors / cores</td>
+<td style="text-align: center;">Y</td>
+<td style="text-align: center;">Y</td>
+<td style="text-align: center;">N</td>
+<td style="text-align: center;">N</td>
+<td style="text-align: center;">N</td>
+<td style="text-align: center;">N</td>
+</tr>
+<tr>
+<td>NL query</td>
+<td style="text-align: center;">Y</td>
+<td style="text-align: center;">Y</td>
+<td style="text-align: center;">Y</td>
+<td style="text-align: center;">scoped</td>
+<td style="text-align: center;">scoped</td>
+<td style="text-align: center;">N</td>
+</tr>
+<tr>
+<td>Direct Cypher/SQL</td>
+<td style="text-align: center;">Y</td>
+<td style="text-align: center;">Y</td>
+<td style="text-align: center;">Y</td>
+<td style="text-align: center;">N</td>
+<td style="text-align: center;">N</td>
+<td style="text-align: center;">N</td>
+</tr>
+<tr>
+<td>Delete graph</td>
+<td style="text-align: center;">Y</td>
+<td style="text-align: center;">N</td>
+<td style="text-align: center;">N</td>
+<td style="text-align: center;">N</td>
+<td style="text-align: center;">N</td>
+<td style="text-align: center;">N</td>
+</tr>
+</tbody>
+</table>
+<p>Multi-tenancy: complete isolation — each tenant gets a separate ArcadeDB database.</p>
+<h3 id="security">Security</h3>
+<p>TLS 1.3 in transit, AES-256 at rest. KEK/DEK hierarchy: KMS-managed KEK wraps per-tenant DEKs, materialized in process memory only when needed. Per-page encryption with unique nonces. Key rotation: KEK annually, DEK quarterly (background re-encrypt-in-place).</p>
+<p>API keys SHA-256 hashed, never plaintext, revocable. PII detection on ingestion with configurable policies (tag, redact, tokenize, block). Right to deletion cascades through entities, relationships, facts, and episode references.</p>
+<h3 id="observability">Observability</h3>
+<p>OpenTelemetry tracing covers ingestion (10-step spans), entity resolution (per-stage spans), search (per-method spans), context assembly, feedback, and connector sync. Semantic span attributes carry pipeline name, episode ID, search recipe, resolution stage, session ID, and feedback score. NullSpan graceful fallback when OTEL is not configured.</p>
+<hr />
+
+<section class="frame-page">
+  <div class="appendix-banner"><div class="appendix-banner-eyebrow">Appendix</div><div class="appendix-banner-title">Visualizing <span class="accent">ContextD</span></div><p class="appendix-banner-lede">Five frames showing the spec running as product — from dashboard to the query that grounds an answer.</p></div>
+  <div class="frame-eyebrow">FRAME 01</div>
+  <h2 class="frame-title">Dashboard — Context Databases</h2>
+  <p class="frame-caption">Operator home. Four context databases, KPI strip, recent activity and queries — all rooted in <code>snowflake-warehouse</code>.</p>
+  <div class="frame-tags"><span class="frame-tag">Dashboard</span><span class="frame-tag">snowflake-warehouse</span></div>
+  <div class="frame-shot-wrap">
+    <img class="frame-shot" src="ss/1.jpg" alt="Dashboard — Context Databases" />
+  </div>
+</section>
+<section class="frame-page">
+  
+  <div class="frame-eyebrow">FRAME 02</div>
+  <h2 class="frame-title">Source Setup Wizard</h2>
+  <p class="frame-caption">Snowflake onboarding in 5 steps, dbt-aware entity inference over <code>LATTICE_DW.PROD_CORE</code>.</p>
+  <div class="frame-tags"><span class="frame-tag">Setup</span><span class="frame-tag">Snowflake</span><span class="frame-tag">dbt-aware</span></div>
+  <div class="frame-shot-wrap">
+    <img class="frame-shot" src="ss/2.jpg" alt="Source Setup Wizard" />
+  </div>
+</section>
+<section class="frame-page">
+  
+  <div class="frame-eyebrow">FRAME 03</div>
+  <h2 class="frame-title">Database Workbench — Overview</h2>
+  <p class="frame-caption">Inside <code>customer-360-prod</code> — KPI strip, entities by type, 10-step ingestion pipeline running live.</p>
+  <div class="frame-tags"><span class="frame-tag">Workbench</span><span class="frame-tag">10-step pipeline</span></div>
+  <div class="frame-shot-wrap">
+    <img class="frame-shot" src="ss/3.jpg" alt="Database Workbench — Overview" />
+  </div>
+</section>
+<section class="frame-page">
+  
+  <div class="frame-eyebrow">FRAME 04</div>
+  <h2 class="frame-title">Workbench — Graph &amp; Entity</h2>
+  <p class="frame-caption">Sarah Mitchell, VIP customer — churn risk surged <code>0.18 → 0.62</code>. Single-source facts, all from Snowflake.</p>
+  <div class="frame-tags"><span class="frame-tag">Graph</span><span class="frame-tag">Entity</span><span class="frame-tag">Bitemporal</span></div>
+  <div class="frame-shot-wrap">
+    <img class="frame-shot" src="ss/4.jpg" alt="Workbench — Graph &amp; Entity" />
+  </div>
+</section>
+<section class="frame-page">
+  
+  <div class="frame-eyebrow">FRAME 05</div>
+  <h2 class="frame-title">Workbench — Query Console</h2>
+  <p class="frame-caption">NL query → grounded answer + retrieved entities + context packet + trace. Database for AI context, not a chat.</p>
+  <div class="frame-tags"><span class="frame-tag">Query</span><span class="frame-tag">Context Packet</span><span class="frame-tag tag-neutral">Audit</span></div>
+  <div class="frame-shot-wrap">
+    <img class="frame-shot" src="ss/5.jpg" alt="Workbench — Query Console" />
+  </div>
+</section>
+</article>
+</body>
+</html>

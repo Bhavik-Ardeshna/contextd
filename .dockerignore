@@ -1,0 +1,55 @@
+.git/
+.env
+.env.*
+.DS_Store
+
+# Local agent/tool metadata
+.agents/
+.claude/
+.claude-flow/
+.codex/
+.cursor/
+.mcp.json
+AGENTS.md
+CLAUDE.md
+
+# Python runtime/build artifacts
+venv/
+.venv/
+backend/venv/
+backend/.venv/
+backend/__pycache__/
+backend/**/*.pyc
+backend/.pytest_cache/
+backend/.ruff_cache/
+backend/.mypy_cache/
+backend/.coverage
+backend/coverage.xml
+backend/htmlcov/
+backend/dist/
+backend/build/
+backend/*.egg-info/
+backend/local_storage/
+backend/.env
+backend/.env.*
+backend/contextd-adk/.pytest_cache/
+backend/contextd-adk/.ruff_cache/
+backend/contextd-adk/.mypy_cache/
+backend/contextd-adk/dist/
+backend/contextd-adk/build/
+backend/contextd-adk/*.egg-info/
+
+# Frontend runtime/build artifacts
+frontend/node_modules/
+frontend/dist/
+frontend/.env
+frontend/.env.*
+frontend/npm-debug.log*
+frontend/yarn-debug.log*
+frontend/yarn-error.log*
+
+# Local generated assets
+docker/neo4j/plugins/*.jar
+logs/
+local_storage/
+local_scripts/

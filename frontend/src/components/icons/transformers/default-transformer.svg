@@ -1,0 +1,6 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" role="img" aria-label="Default transformer icon">
+  <rect width="64" height="64" rx="14" fill="#0f766e"/>
+  <path d="M21 20h22v24H21z" fill="#ccfbf1"/>
+  <path d="M16 26h8M16 38h8M40 26h8M40 38h8M28 14v8M36 14v8M28 42v8M36 42v8" stroke="#ccfbf1" stroke-width="4" stroke-linecap="round"/>
+  <path d="M28 29h8v6h-8z" fill="#0f766e"/>
+</svg>

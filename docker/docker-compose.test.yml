@@ -1,0 +1,130 @@
+# docker-compose.test.yml
+# Used for system testing with dedicated configuration
+# All required environment variables are explicitly set here
+name: contextd-test
+
+services:
+  postgres:
+    image: postgres:16
+    environment:
+      - POSTGRES_USER=contextd
+      - POSTGRES_PASSWORD=contextd-dev-password
+      - POSTGRES_DB=contextd
+    ports:
+      - "9432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: [ "CMD-SHELL", "pg_isready -U contextd" ]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+  redis:
+    image: redis:7-alpine
+    ports:
+      - "9379:6379"
+    volumes:
+      - redis_data:/data
+    healthcheck:
+      test: [ "CMD", "redis-cli", "ping" ]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+  milvus-etcd:
+    image: quay.io/coreos/etcd:v3.5.18
+    environment:
+      - ETCD_AUTO_COMPACTION_MODE=revision
+      - ETCD_AUTO_COMPACTION_RETENTION=1000
+      - ETCD_QUOTA_BACKEND_BYTES=4294967296
+      - ETCD_SNAPSHOT_COUNT=50000
+    command:
+      - etcd
+      - --advertise-client-urls=http://milvus-etcd:2379
+      - --listen-client-urls=http://0.0.0.0:2379
+      - --data-dir=/etcd
+    volumes:
+      - milvus_etcd_data:/etcd
+    healthcheck:
+      test: [ "CMD", "etcdctl", "endpoint", "health" ]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  milvus:
+    image: milvusdb/milvus:latest
+    command: [ "milvus", "run", "standalone" ]
+    ports:
+      - "19531:19530"
+      - "9092:9091"
+    environment:
+      - ETCD_ENDPOINTS=milvus-etcd:2379
+      - COMMON_STORAGETYPE=local
+    volumes:
+      - milvus_data:/var/lib/milvus
+    depends_on:
+      milvus-etcd:
+        condition: service_healthy
+    healthcheck:
+      test: [ "CMD", "curl", "-f", "http://localhost:9091/healthz" ]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+
+  backend:
+    build:
+      context: ..
+      dockerfile: docker/backend/Dockerfile.dev
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+      milvus:
+        condition: service_healthy
+
+    # Override specific variables for container-specific settings
+    environment:
+      - DATABASE_URL=postgresql+asyncpg://contextd:contextd-dev-password@postgres:5432/contextd
+      - REDIS_HOST=redis
+      - VECTOR_STORE_PROVIDER=milvus
+      - MILVUS_HOST=milvus
+      - MILVUS_PORT=19530
+      - MILVUS_COLLECTION=contextd_adk_memories
+      - SEARCH_INDEX_BACKEND=neo4j-fulltext
+      - USE_ENTITY_INDEXING=true
+      - INDEX_FULLTEXT_ENABLED=true
+      - SESSION_REDIS_HOST=redis
+      - SESSION_REDIS_PORT=6379
+      - LANGFUSE_ENABLED=false
+      - TESTING=true
+      - POSTGRES_HOST=postgres
+      - POSTGRES_PORT=5432
+      - POSTGRES_USER=contextd
+      - POSTGRES_PASSWORD=contextd-dev-password
+      - POSTGRES_DB=contextd
+      - FIRST_SUPERUSER=admin@example.com
+      - FIRST_SUPERUSER_PASSWORD=admin
+      - ENCRYPTION_KEY="SpgLrrEEgJ/7QdhSMSvagL1juEY5eoyCG0tZN7OSQV0="
+      - STATE_SECRET=test-state-secret-with-at-least-thirty-two-chars
+      - AUTH_ENABLED=false
+
+    ports:
+      - "9001:8001"
+    volumes:
+      - ../backend:/app
+      - contextd_storage:/app/local_storage
+    healthcheck:
+      test: [ "CMD", "curl", "-f", "http://localhost:8001/health" ]
+      interval: 5s
+      timeout: 10s
+      retries: 10
+      start_period: 60s
+
+volumes:
+  postgres_data:
+  redis_data:
+  milvus_data:
+  milvus_etcd_data:
+  contextd_storage:
